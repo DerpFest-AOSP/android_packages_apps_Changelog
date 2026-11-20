@@ -14,11 +14,13 @@ import org.derpfest.changelog.ui.ChangelogApp
 import org.derpfest.changelog.ui.theme.ChangelogTheme
 import org.derpfest.changelog.viewmodels.ChangelogViewModel
 import org.derpfest.changelog.viewmodels.DevicesViewModel
+import org.derpfest.changelog.viewmodels.SettingsViewModel
 
 class MainActivity : ComponentActivity() {
     // View models
     private val changelogViewModel: ChangelogViewModel by viewModels()
     private val devicesViewModel: DevicesViewModel by viewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +31,7 @@ class MainActivity : ComponentActivity() {
                 ChangelogApp(
                     changelogViewModel = changelogViewModel,
                     devicesViewModel = devicesViewModel,
+                    settingsViewModel = settingsViewModel,
                 )
             }
         }

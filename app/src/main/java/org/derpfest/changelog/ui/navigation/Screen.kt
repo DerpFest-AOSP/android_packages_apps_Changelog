@@ -18,4 +18,9 @@ sealed interface Screen {
      * Devices screen.
      */
     data object Devices : Screen
+
+    /**
+     * Settings screen.
+     */
+    data object Settings : Screen
 }

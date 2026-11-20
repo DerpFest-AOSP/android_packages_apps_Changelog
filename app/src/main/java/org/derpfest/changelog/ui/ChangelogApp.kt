@@ -14,11 +14,13 @@ import org.derpfest.changelog.ui.navigation.ChangelogNavDisplay
 import org.derpfest.changelog.ui.navigation.Screen
 import org.derpfest.changelog.viewmodels.ChangelogViewModel
 import org.derpfest.changelog.viewmodels.DevicesViewModel
+import org.derpfest.changelog.viewmodels.SettingsViewModel
 
 @Composable
 fun ChangelogApp(
     changelogViewModel: ChangelogViewModel,
     devicesViewModel: DevicesViewModel,
+    settingsViewModel: SettingsViewModel,
 ) {
     val navigationBackStack = remember { mutableStateListOf<Screen>(Screen.Changelog) }
 
@@ -26,6 +28,7 @@ fun ChangelogApp(
         navigationBackStack = navigationBackStack,
         changelogViewModel = changelogViewModel,
         devicesViewModel = devicesViewModel,
+        settingsViewModel = settingsViewModel,
         modifier = Modifier.fillMaxSize(),
     )
 }

@@ -108,3 +108,11 @@ var SharedPreferences.tapAction: TapAction
     set(value) = edit {
         putInt(TAP_ACTION_KEY, value.ordinal)
     }
+
+const val HIGHLIGHT_NEW_KEY = "highlight_new"
+private const val HIGHLIGHT_NEW_DEFAULT = true
+var SharedPreferences.highlightNew: Boolean
+    get() = getBoolean(HIGHLIGHT_NEW_KEY, HIGHLIGHT_NEW_DEFAULT)
+    set(value) = edit {
+        putBoolean(HIGHLIGHT_NEW_KEY, value)
+    }

@@ -97,6 +97,7 @@ import java.util.Locale
 fun ChangelogScreen(
     changelogViewModel: ChangelogViewModel,
     onShowDevices: () -> Unit,
+    onShowSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val changelog by changelogViewModel.changelog.collectAsState()
@@ -224,6 +225,7 @@ fun ChangelogScreen(
                 },
                 onShowFilters = { showFilterSheet = true },
                 onShowDevices = onShowDevices,
+                onShowSettings = onShowSettings,
             )
         },
         floatingActionButtonPosition = FabPosition.Center,

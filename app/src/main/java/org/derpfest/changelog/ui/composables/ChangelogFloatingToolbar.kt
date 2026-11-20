@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
@@ -29,6 +30,7 @@ fun ChangelogFloatingToolbar(
     onSearch: () -> Unit,
     onShowFilters: () -> Unit,
     onShowDevices: () -> Unit,
+    onShowSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val refreshLabel = stringResource(R.string.refresh)
@@ -64,6 +66,12 @@ fun ChangelogFloatingToolbar(
             icon = Icons.Filled.Devices,
             label = stringResource(R.string.devices),
             onClick = onShowDevices,
+        )
+
+        ToolbarButton(
+            icon = Icons.Filled.Settings,
+            label = stringResource(R.string.settings),
+            onClick = onShowSettings,
         )
     }
 }
