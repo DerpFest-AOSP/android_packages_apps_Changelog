@@ -107,6 +107,8 @@ fun ChangelogScreen(
     val isRefreshing by changelogViewModel.isRefreshing.collectAsState()
     val error by changelogViewModel.error.collectAsState()
     val tapAction by changelogViewModel.tapAction.collectAsState()
+    val highlightNew by changelogViewModel.highlightNew.collectAsState()
+    val newChangeIds by changelogViewModel.newChangeIds.collectAsState()
 
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
@@ -236,6 +238,8 @@ fun ChangelogScreen(
             currentEntries != null -> ChangelogList(
                 entries = currentEntries,
                 expandedChangeIds = expandedChangeIds,
+                newChangeIds = newChangeIds,
+                highlightNew = highlightNew,
                 isTruncated = changelog?.isTruncated == true,
                 isRefreshing = isRefreshing,
                 onRefresh = { changelogViewModel.refresh() },
@@ -306,6 +310,8 @@ fun ChangelogScreen(
     ChangelogSearchBar(
         searchBarState = searchBarState,
         changes = filteredChanges.orEmpty(),
+        newChangeIds = newChangeIds,
+        highlightNew = highlightNew,
         onChangeClick = onChangeClick,
         onOpen = onOpen,
         onShare = onShare,
@@ -339,6 +345,8 @@ fun ChangelogScreen(
 private fun ChangelogList(
     entries: List<ChangelogEntry>,
     expandedChangeIds: Set<String>,
+    newChangeIds: Set<String>,
+    highlightNew: Boolean,
     isTruncated: Boolean,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
@@ -405,6 +413,7 @@ private fun ChangelogList(
                             index = entry.index,
                             count = entry.count,
                             isExpanded = entry.change.id in expandedChangeIds,
+                            isNew = highlightNew && entry.change.id in newChangeIds,
                             onClick = { onChangeClick(entry.change) },
                             onOpen = { onOpen(entry.change) },
                             onShare = { onShare(entry.change) },

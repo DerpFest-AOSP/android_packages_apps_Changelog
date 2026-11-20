@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Badge
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ListItemDefaults
@@ -43,6 +44,7 @@ fun ChangeListItem(
     index: Int,
     count: Int,
     isExpanded: Boolean,
+    isNew: Boolean,
     onClick: () -> Unit,
     onOpen: () -> Unit,
     onShare: () -> Unit,
@@ -56,6 +58,18 @@ fun ChangeListItem(
 
     var showMenu by remember { mutableStateOf(false) }
 
+    val colors = if (isNew) {
+        ListItemDefaults.segmentedColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            leadingContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            overlineContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            supportingContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        )
+    } else {
+        ListItemDefaults.segmentedColors()
+    }
+
     Box(modifier = modifier) {
         SegmentedListItem(
             onClick = onClick,
@@ -65,6 +79,15 @@ fun ChangeListItem(
             ),
             leadingContent = {
                 SourceAvatar(source = change.source)
+            },
+            trailingContent = if (isNew) {
+                {
+                    Badge {
+                        Text(text = stringResource(R.string.change_new))
+                    }
+                }
+            } else {
+                null
             },
             overlineContent = {
                 Text(
@@ -96,6 +119,7 @@ fun ChangeListItem(
             },
             onLongClick = { showMenu = true },
             onLongClickLabel = stringResource(R.string.change_actions),
+            colors = colors,
         ) {
             Text(
                 text = change.subject,

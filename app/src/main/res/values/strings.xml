@@ -76,6 +76,7 @@
 
     <!-- Changes -->
     <string name="change_author_time"><xliff:g id="author" example="John Doe">%1$s</xliff:g> · <xliff:g id="time" example="14:03">%2$s</xliff:g></string>
+    <string name="change_new">New</string>
 
     <!-- Change actions -->
     <string name="change_actions">Show actions</string>

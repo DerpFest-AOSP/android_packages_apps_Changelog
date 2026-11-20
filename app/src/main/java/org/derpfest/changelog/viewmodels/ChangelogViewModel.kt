@@ -24,9 +24,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.derpfest.changelog.ChangelogApplication
 import org.derpfest.changelog.ext.CHANGES_FILTER_KEYS
+import org.derpfest.changelog.ext.HIGHLIGHT_NEW_KEY
 import org.derpfest.changelog.ext.SHOW_ALL_DEVICES_KEY
 import org.derpfest.changelog.ext.TAP_ACTION_KEY
 import org.derpfest.changelog.ext.changesFilter
+import org.derpfest.changelog.ext.highlightNew
 import org.derpfest.changelog.ext.period
 import org.derpfest.changelog.ext.preferenceFlow
 import org.derpfest.changelog.ext.sharedPreferences
@@ -95,9 +97,28 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
         )
 
     /**
+     * Whether new changes are highlighted in the list.
+     */
+    val highlightNew = sharedPreferences.preferenceFlow(
+        HIGHLIGHT_NEW_KEY,
+        getter = SharedPreferences::highlightNew,
+    )
+        .flowOn(Dispatchers.IO)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = sharedPreferences.highlightNew,
+        )
+
+    /**
      * The changelog, null until it got loaded or fetched.
      */
     val changelog = changelogRepository.changelog
+
+    /**
+     * The identifiers of the changes that showed up since the app got started.
+     */
+    val newChangeIds = changelogRepository.newChangeIds
 
     /**
      * The changes of the current period that match the filter, newest first.
