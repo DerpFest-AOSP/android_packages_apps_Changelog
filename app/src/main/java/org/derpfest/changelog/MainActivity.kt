@@ -9,17 +9,24 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import org.derpfest.changelog.ui.ChangelogApp
 import org.derpfest.changelog.ui.theme.ChangelogTheme
+import org.derpfest.changelog.viewmodels.ChangelogViewModel
 
 class MainActivity : ComponentActivity() {
+    // View models
+    private val changelogViewModel: ChangelogViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
         setContent {
             ChangelogTheme {
-                ChangelogApp()
+                ChangelogApp(
+                    changelogViewModel = changelogViewModel,
+                )
             }
         }
     }

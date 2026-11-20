@@ -3,7 +3,40 @@
      SPDX-FileCopyrightText: DerpFest AOSP
      SPDX-License-Identifier: Apache-2.0
 -->
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- App -->
     <string name="app_name" translatable="false">Changelog</string>
+
+    <!-- Actions -->
+    <string name="dismiss">Dismiss</string>
+    <string name="retry">Retry</string>
+
+    <!-- Changelog -->
+    <string name="changelog_since_build">Since your build, %1$s</string>
+    <string name="changelog_empty_title">You\'re up to date</string>
+    <string name="changelog_empty_since_build">Nothing got merged since your build. Pull down to check again.</string>
+    <string name="changelog_truncated">Older changes are left out, there are too many of them</string>
+
+    <!-- Days -->
+    <string name="day_today">Today</string>
+    <string name="day_yesterday">Yesterday</string>
+
+    <!-- Changes -->
+    <string name="change_author_time"><xliff:g id="author" example="John Doe">%1$s</xliff:g> · <xliff:g id="time" example="14:03">%2$s</xliff:g></string>
+
+    <!-- Sources -->
+    <string name="source_derpfest">DerpFest</string>
+    <string name="source_lineageos">LineageOS</string>
+    <string name="source_devices">Devices</string>
+
+    <!-- Errors -->
+    <string name="error_title">Couldn\'t load the changelog</string>
+    <string name="error_network">Check your internet connection and try again.</string>
+    <plurals name="error_rate_limited">
+        <item quantity="one">The GitHub request limit got reached. Try again in <xliff:g id="minutes" example="1">%1$d</xliff:g> minute.</item>
+        <item quantity="other">The GitHub request limit got reached. Try again in <xliff:g id="minutes" example="5">%1$d</xliff:g> minutes.</item>
+    </plurals>
+    <string name="error_rate_limit_over">The GitHub request limit got reset. Try again now.</string>
+    <string name="error_http">The server responded with error <xliff:g id="code" example="500">%1$d</xliff:g>.</string>
+    <string name="error_invalid_response">The server sent a response that couldn\'t be read.</string>
 </resources>

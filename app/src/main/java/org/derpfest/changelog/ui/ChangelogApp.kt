@@ -5,41 +5,24 @@
 
 package org.derpfest.changelog.ui
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.LargeFlexibleTopAppBar
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
-import org.derpfest.changelog.R
+import org.derpfest.changelog.ui.navigation.ChangelogNavDisplay
+import org.derpfest.changelog.ui.navigation.Screen
+import org.derpfest.changelog.viewmodels.ChangelogViewModel
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChangelogApp(
-    modifier: Modifier = Modifier,
+    changelogViewModel: ChangelogViewModel,
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val navigationBackStack = remember { mutableStateListOf<Screen>(Screen.Changelog) }
 
-    Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            LargeFlexibleTopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
-                scrollBehavior = scrollBehavior,
-            )
-        },
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-        )
-    }
+    ChangelogNavDisplay(
+        navigationBackStack = navigationBackStack,
+        changelogViewModel = changelogViewModel,
+        modifier = Modifier.fillMaxSize(),
+    )
 }
