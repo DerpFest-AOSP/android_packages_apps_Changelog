@@ -6,6 +6,7 @@
 package org.derpfest.changelog.ui.composables
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -27,6 +28,7 @@ fun ChangelogFloatingToolbar(
     onRefresh: () -> Unit,
     onSearch: () -> Unit,
     onShowFilters: () -> Unit,
+    onShowDevices: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val refreshLabel = stringResource(R.string.refresh)
@@ -56,6 +58,12 @@ fun ChangelogFloatingToolbar(
             icon = Icons.Filled.FilterList,
             label = stringResource(R.string.filters),
             onClick = onShowFilters,
+        )
+
+        ToolbarButton(
+            icon = Icons.Filled.Devices,
+            label = stringResource(R.string.devices),
+            onClick = onShowDevices,
         )
     }
 }

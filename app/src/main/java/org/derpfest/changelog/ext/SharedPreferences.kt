@@ -9,6 +9,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
+import android.os.Build
 import org.derpfest.changelog.models.ChangeSource
 import org.derpfest.changelog.models.ChangesFilter
 import org.derpfest.changelog.models.Period
@@ -80,6 +81,24 @@ val SharedPreferences.changesFilter: ChangesFilter
         showTranslations = showTranslations,
         showMerges = showMerges,
     )
+
+// Devices prefs
+const val SHOW_ALL_DEVICES_KEY = "show_all_devices"
+private const val SHOW_ALL_DEVICES_DEFAULT = false
+var SharedPreferences.showAllDevices: Boolean
+    get() = getBoolean(SHOW_ALL_DEVICES_KEY, SHOW_ALL_DEVICES_DEFAULT)
+    set(value) = edit {
+        putBoolean(SHOW_ALL_DEVICES_KEY, value)
+    }
+
+const val WATCHED_DEVICES_KEY = "watched_devices"
+var SharedPreferences.watchedDevices: Set<String>
+    get() = getStringSet(WATCHED_DEVICES_KEY, null) ?: setOf(Build.DEVICE)
+    set(value) = edit {
+        putStringSet(WATCHED_DEVICES_KEY, value)
+    }
+
+val DEVICE_FILTER_KEYS = arrayOf(SHOW_ALL_DEVICES_KEY, WATCHED_DEVICES_KEY)
 
 // List prefs
 const val TAP_ACTION_KEY = "tap_action"

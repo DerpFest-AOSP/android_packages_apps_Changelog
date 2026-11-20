@@ -12,6 +12,9 @@
     <string name="github_organization" translatable="false">DerpFest-AOSP</string>
     <string name="github_devices_organization" translatable="false">DerpFest-Devices</string>
 
+    <!-- Devices -->
+    <string name="devices_index_url" translatable="false">https://derpfest.org/devices-index.json</string>
+
     <!-- Gerrit -->
     <string name="gerrit_url" translatable="false">https://review.lineageos.org</string>
 </resources>

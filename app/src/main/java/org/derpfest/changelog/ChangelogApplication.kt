@@ -7,6 +7,7 @@ package org.derpfest.changelog
 
 import android.app.Application
 import org.derpfest.changelog.repositories.ChangelogRepository
+import org.derpfest.changelog.repositories.DevicesRepository
 import org.derpfest.changelog.repositories.ManifestRepository
 
 class ChangelogApplication : Application() {
@@ -14,4 +15,5 @@ class ChangelogApplication : Application() {
     val changelogRepository by lazy {
         ChangelogRepository(applicationContext, manifestRepository)
     }
+    val devicesRepository by lazy { DevicesRepository(applicationContext) }
 }

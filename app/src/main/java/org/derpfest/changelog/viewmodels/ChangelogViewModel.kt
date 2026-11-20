@@ -24,11 +24,13 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.derpfest.changelog.ChangelogApplication
 import org.derpfest.changelog.ext.CHANGES_FILTER_KEYS
+import org.derpfest.changelog.ext.SHOW_ALL_DEVICES_KEY
 import org.derpfest.changelog.ext.TAP_ACTION_KEY
 import org.derpfest.changelog.ext.changesFilter
 import org.derpfest.changelog.ext.period
 import org.derpfest.changelog.ext.preferenceFlow
 import org.derpfest.changelog.ext.sharedPreferences
+import org.derpfest.changelog.ext.showAllDevices
 import org.derpfest.changelog.ext.showMerges
 import org.derpfest.changelog.ext.showTranslations
 import org.derpfest.changelog.ext.sources
@@ -46,6 +48,7 @@ import java.time.ZoneId
  */
 class ChangelogViewModel(application: Application) : AndroidViewModel(application) {
     private val changelogRepository = getApplication<ChangelogApplication>().changelogRepository
+    private val devicesRepository = getApplication<ChangelogApplication>().devicesRepository
 
     private val sharedPreferences = application.sharedPreferences
 
@@ -61,6 +64,20 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
             initialValue = sharedPreferences.changesFilter,
+        )
+
+    /**
+     * Whether changes of every DerpFest-Devices repository are shown.
+     */
+    private val showAllDevices = sharedPreferences.preferenceFlow(
+        SHOW_ALL_DEVICES_KEY,
+        getter = SharedPreferences::showAllDevices,
+    )
+        .flowOn(Dispatchers.IO)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = sharedPreferences.showAllDevices,
         )
 
     /**
@@ -85,12 +102,19 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
     /**
      * The changes of the current period that match the filter, newest first.
      */
-    val filteredChanges = combine(changelog, filter) { changelog, filter ->
+    val filteredChanges = combine(
+        changelog,
+        filter,
+        showAllDevices,
+        devicesRepository.watchedRepositories,
+    ) { changelog, filter, showAllDevices, watchedRepositories ->
         changelog?.let {
             val since = filter.period.startTime(System.currentTimeMillis())
 
             it.changes.filter { change ->
-                change.timestamp >= since && filter.matches(change)
+                change.timestamp >= since &&
+                        filter.matches(change) &&
+                        change.matchesDeviceFilter(showAllDevices, watchedRepositories)
             }
         }
     }
@@ -269,6 +293,17 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
                     )
                 )
             }
+        }
+
+        private fun Change.matchesDeviceFilter(
+            showAllDevices: Boolean,
+            watchedRepositories: Set<String>?,
+        ) = when {
+            source != ChangeSource.DEVICES -> true
+            showAllDevices -> true
+            // Hide device changes until the watched repositories are known
+            watchedRepositories == null -> false
+            else -> repository.lowercase() in watchedRepositories
         }
     }
 }

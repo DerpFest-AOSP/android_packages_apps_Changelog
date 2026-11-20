@@ -13,4 +13,9 @@ sealed interface Screen {
      * Changelog screen.
      */
     data object Changelog : Screen
+
+    /**
+     * Devices screen.
+     */
+    data object Devices : Screen
 }

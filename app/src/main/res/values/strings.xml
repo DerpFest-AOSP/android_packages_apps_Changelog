@@ -34,6 +34,19 @@
     <string name="search_empty_title">No matching changes</string>
     <string name="search_empty">Nothing matches \"<xliff:g id="query" example="systemui">%1$s</xliff:g>\".</string>
 
+    <!-- Devices -->
+    <string name="devices">Devices</string>
+    <string name="back">Back</string>
+    <string name="devices_search_hint">Search devices</string>
+    <string name="devices_show_all">All devices</string>
+    <string name="devices_show_all_summary">Show changes of every DerpFest-Devices repository</string>
+    <string name="devices_this_device">This device</string>
+    <string name="devices_watched">Watched</string>
+    <string name="devices_maintainer">Maintained by <xliff:g id="maintainer" example="Someone">%1$s</xliff:g></string>
+    <string name="devices_empty_title">No matching devices</string>
+    <string name="devices_empty">Nothing matches \"<xliff:g id="query" example="pixel">%1$s</xliff:g>\".</string>
+    <string name="devices_error_title">Couldn\'t load the devices</string>
+
     <!-- Filters -->
     <string name="filters">Filters</string>
     <string name="filter_period">Time range</string>
