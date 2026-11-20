@@ -26,7 +26,6 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
 import androidx.compose.runtime.Composable
@@ -58,7 +57,7 @@ fun FilterSheet(
     onShowMergesChange: (Boolean) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    ModalBottomSheet(onDismissRequest = onDismissRequest) {
+    ChangelogBottomSheet(onDismissRequest = onDismissRequest) {
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())

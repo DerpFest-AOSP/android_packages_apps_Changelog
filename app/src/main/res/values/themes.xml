@@ -8,4 +8,23 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
     </style>
+
+    <!--
+        Sheet-sized window that blurs only what is behind the sheet. It has to be translucent or
+        the background blur is ignored, and it must not dim or take touches: the sheet dialog in
+        front of it does both.
+    -->
+    <style name="Theme.Changelog.SheetBlur" parent="@android:style/Theme.DeviceDefault.Dialog">
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowElevation">0dp</item>
+        <item name="android:windowMinWidthMajor">0dp</item>
+        <item name="android:windowMinWidthMinor">0dp</item>
+        <item name="android:windowCloseOnTouchOutside">false</item>
+    </style>
 </resources>
