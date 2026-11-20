@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: DerpFest AOSP
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- Manifest -->
+    <string name="manifest_url" translatable="false">https://github.com/DerpFest-AOSP/android_manifest</string>
+    <string name="manifest_raw_url" translatable="false">https://raw.githubusercontent.com/DerpFest-AOSP/android_manifest/17/default.xml</string>
+</resources>
