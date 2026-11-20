@@ -20,6 +20,13 @@ val ChangeSource.labelResId: Int
         ChangeSource.DEVICES -> R.string.source_devices
     }
 
+val ChangeSource.openLabelResId: Int
+    get() = when (this) {
+        ChangeSource.LINEAGEOS -> R.string.change_open_gerrit
+        ChangeSource.DERPFEST,
+        ChangeSource.DEVICES -> R.string.change_open_github
+    }
+
 val ChangeSource.icon: ImageVector
     get() = when (this) {
         ChangeSource.DERPFEST -> Icons.Filled.Commit

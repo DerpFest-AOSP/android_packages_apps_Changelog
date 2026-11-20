@@ -6,6 +6,7 @@
 package org.derpfest.changelog.viewmodels
 
 import android.app.Application
+import android.content.SharedPreferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +19,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.derpfest.changelog.ChangelogApplication
+import org.derpfest.changelog.ext.TAP_ACTION_KEY
+import org.derpfest.changelog.ext.preferenceFlow
+import org.derpfest.changelog.ext.sharedPreferences
+import org.derpfest.changelog.ext.tapAction
 import org.derpfest.changelog.models.Change
 import org.derpfest.changelog.models.ChangelogEntry
 import org.derpfest.changelog.models.ChangelogError
@@ -30,6 +35,22 @@ import java.time.ZoneId
  */
 class ChangelogViewModel(application: Application) : AndroidViewModel(application) {
     private val changelogRepository = getApplication<ChangelogApplication>().changelogRepository
+
+    private val sharedPreferences = application.sharedPreferences
+
+    /**
+     * What tapping a change does.
+     */
+    val tapAction = sharedPreferences.preferenceFlow(
+        TAP_ACTION_KEY,
+        getter = SharedPreferences::tapAction,
+    )
+        .flowOn(Dispatchers.IO)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = sharedPreferences.tapAction,
+        )
 
     /**
      * The changelog, null until it got loaded or fetched.

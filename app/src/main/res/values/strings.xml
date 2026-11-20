@@ -24,6 +24,21 @@
     <!-- Changes -->
     <string name="change_author_time"><xliff:g id="author" example="John Doe">%1$s</xliff:g> · <xliff:g id="time" example="14:03">%2$s</xliff:g></string>
 
+    <!-- Change actions -->
+    <string name="change_actions">Show actions</string>
+    <string name="change_open_github">Open on GitHub</string>
+    <string name="change_open_gerrit">Open on Gerrit</string>
+    <string name="change_share">Share</string>
+    <string name="change_copy_link">Copy link</string>
+
+    <!-- Change details -->
+    <string name="change_details_repository">Repository</string>
+    <string name="change_details_path">Path</string>
+    <string name="change_details_branch">Branch</string>
+    <string name="change_details_author">Author</string>
+    <string name="change_details_date">Date</string>
+    <string name="change_details_commit">Commit</string>
+
     <!-- Sources -->
     <string name="source_derpfest">DerpFest</string>
     <string name="source_lineageos">LineageOS</string>

@@ -47,19 +47,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.derpfest.changelog.R
+import org.derpfest.changelog.ext.copyLink
+import org.derpfest.changelog.ext.shareLink
 import org.derpfest.changelog.ext.text
 import org.derpfest.changelog.models.Change
 import org.derpfest.changelog.models.ChangelogEntry
+import org.derpfest.changelog.models.TapAction
+import org.derpfest.changelog.ui.composables.ChangeDetailsSheet
 import org.derpfest.changelog.ui.composables.ChangeListItem
 import org.derpfest.changelog.ui.composables.DayHeader
 import org.derpfest.changelog.ui.composables.EmptyState
@@ -76,8 +84,17 @@ fun ChangelogScreen(
     val entries by changelogViewModel.entries.collectAsState()
     val isRefreshing by changelogViewModel.isRefreshing.collectAsState()
     val error by changelogViewModel.error.collectAsState()
+    val tapAction by changelogViewModel.tapAction.collectAsState()
 
+    val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
+
+    var selectedChange by remember { mutableStateOf<Change?>(null) }
+    val expandedChangeIds = remember { mutableStateSetOf<String>() }
+
+    val onOpen: (Change) -> Unit = { uriHandler.openUri(it.url) }
+    val onShare: (Change) -> Unit = { context.shareLink(it.url, it.subject) }
+    val onCopyLink: (Change) -> Unit = { context.copyLink(it.url, it.subject) }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -160,10 +177,22 @@ fun ChangelogScreen(
         when {
             currentEntries != null -> ChangelogList(
                 entries = currentEntries,
+                expandedChangeIds = expandedChangeIds,
                 isTruncated = changelog?.isTruncated == true,
                 isRefreshing = isRefreshing,
                 onRefresh = { changelogViewModel.refresh() },
-                onChangeClick = { uriHandler.openUri(it.url) },
+                onChangeClick = { change ->
+                    when (tapAction) {
+                        TapAction.DETAILS -> selectedChange = change
+
+                        TapAction.EXPAND -> if (!expandedChangeIds.remove(change.id)) {
+                            expandedChangeIds.add(change.id)
+                        }
+                    }
+                },
+                onOpen = onOpen,
+                onShare = onShare,
+                onCopyLink = onCopyLink,
                 contentPadding = innerPadding,
             )
 
@@ -194,16 +223,30 @@ fun ChangelogScreen(
             }
         }
     }
+
+    selectedChange?.let { change ->
+        ChangeDetailsSheet(
+            change = change,
+            onOpen = { onOpen(change) },
+            onShare = { onShare(change) },
+            onCopyLink = { onCopyLink(change) },
+            onDismissRequest = { selectedChange = null },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ChangelogList(
     entries: List<ChangelogEntry>,
+    expandedChangeIds: Set<String>,
     isTruncated: Boolean,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     onChangeClick: (Change) -> Unit,
+    onOpen: (Change) -> Unit,
+    onShare: (Change) -> Unit,
+    onCopyLink: (Change) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
@@ -263,7 +306,11 @@ private fun ChangelogList(
                             change = entry.change,
                             index = entry.index,
                             count = entry.count,
+                            isExpanded = entry.change.id in expandedChangeIds,
                             onClick = { onChangeClick(entry.change) },
+                            onOpen = { onOpen(entry.change) },
+                            onShare = { onShare(entry.change) },
+                            onCopyLink = { onCopyLink(entry.change) },
                             modifier = Modifier.animateItem(),
                         )
                     }
