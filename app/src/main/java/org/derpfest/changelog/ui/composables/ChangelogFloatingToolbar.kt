@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,7 +24,6 @@ import org.derpfest.changelog.R
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChangelogFloatingToolbar(
-    expanded: Boolean,
     onRefresh: () -> Unit,
     onSearch: () -> Unit,
     onShowFilters: () -> Unit,
@@ -33,22 +31,9 @@ fun ChangelogFloatingToolbar(
     onShowSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val refreshLabel = stringResource(R.string.refresh)
-
     HorizontalFloatingToolbar(
-        expanded = expanded,
-        floatingActionButton = {
-            ToolbarTooltip(refreshLabel) {
-                FloatingToolbarDefaults.VibrantFloatingActionButton(onClick = onRefresh) {
-                    Icon(
-                        imageVector = Icons.Filled.Refresh,
-                        contentDescription = refreshLabel,
-                    )
-                }
-            }
-        },
+        expanded = true,
         modifier = modifier,
-        colors = FloatingToolbarDefaults.vibrantFloatingToolbarColors(),
     ) {
         ToolbarButton(
             icon = Icons.Filled.Search,
@@ -72,6 +57,12 @@ fun ChangelogFloatingToolbar(
             icon = Icons.Filled.Settings,
             label = stringResource(R.string.settings),
             onClick = onShowSettings,
+        )
+
+        ToolbarButton(
+            icon = Icons.Filled.Refresh,
+            label = stringResource(R.string.refresh),
+            onClick = onRefresh,
         )
     }
 }

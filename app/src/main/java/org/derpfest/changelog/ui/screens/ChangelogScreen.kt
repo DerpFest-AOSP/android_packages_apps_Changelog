@@ -8,6 +8,9 @@ package org.derpfest.changelog.ui.screens
 import android.os.Build
 import android.text.format.DateFormat
 import android.text.format.DateUtils
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -67,6 +70,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
@@ -117,7 +121,7 @@ fun ChangelogScreen(
     var selectedChange by remember { mutableStateOf<Change?>(null) }
     val expandedChangeIds = remember { mutableStateSetOf<String>() }
     var showFilterSheet by rememberSaveable { mutableStateOf(false) }
-    var isToolbarExpanded by rememberSaveable { mutableStateOf(true) }
+    var isToolbarVisible by rememberSaveable { mutableStateOf(true) }
     val searchBarState = rememberSearchBarState()
 
     val onOpen: (Change) -> Unit = { uriHandler.openUri(it.url) }
@@ -217,18 +221,24 @@ fun ChangelogScreen(
             }
         },
         floatingActionButton = {
-            ChangelogFloatingToolbar(
-                expanded = isToolbarExpanded,
-                onRefresh = { changelogViewModel.refresh() },
-                onSearch = {
-                    scope.launch {
-                        searchBarState.animateToExpanded()
-                    }
-                },
-                onShowFilters = { showFilterSheet = true },
-                onShowDevices = onShowDevices,
-                onShowSettings = onShowSettings,
-            )
+            val toolbarClearance = with(LocalDensity.current) { 64.dp.roundToPx() }
+            AnimatedVisibility(
+                visible = isToolbarVisible,
+                enter = slideInVertically { it + toolbarClearance },
+                exit = slideOutVertically { it + toolbarClearance },
+            ) {
+                ChangelogFloatingToolbar(
+                    onRefresh = { changelogViewModel.refresh() },
+                    onSearch = {
+                        scope.launch {
+                            searchBarState.animateToExpanded()
+                        }
+                    },
+                    onShowFilters = { showFilterSheet = true },
+                    onShowDevices = onShowDevices,
+                    onShowSettings = onShowSettings,
+                )
+            }
         },
         floatingActionButtonPosition = FabPosition.Center,
     ) { innerPadding ->
@@ -272,9 +282,9 @@ fun ChangelogScreen(
                 contentPadding = innerPadding,
                 modifier = with(FloatingToolbarDefaults) {
                     Modifier.floatingToolbarVerticalNestedScroll(
-                        expanded = isToolbarExpanded,
-                        onExpand = { isToolbarExpanded = true },
-                        onCollapse = { isToolbarExpanded = false },
+                        expanded = isToolbarVisible,
+                        onExpand = { isToolbarVisible = true },
+                        onCollapse = { isToolbarVisible = false },
                     )
                 },
             )
