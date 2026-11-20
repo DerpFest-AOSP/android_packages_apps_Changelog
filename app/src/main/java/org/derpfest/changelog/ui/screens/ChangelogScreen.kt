@@ -7,24 +7,33 @@ package org.derpfest.changelog.ui.screens
 
 import android.os.Build
 import android.text.format.DateFormat
+import android.text.format.DateUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingToolbarDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
@@ -37,6 +46,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -50,6 +60,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,11 +77,14 @@ import org.derpfest.changelog.ext.shareLink
 import org.derpfest.changelog.ext.text
 import org.derpfest.changelog.models.Change
 import org.derpfest.changelog.models.ChangelogEntry
+import org.derpfest.changelog.models.Period
 import org.derpfest.changelog.models.TapAction
 import org.derpfest.changelog.ui.composables.ChangeDetailsSheet
 import org.derpfest.changelog.ui.composables.ChangeListItem
+import org.derpfest.changelog.ui.composables.ChangelogFloatingToolbar
 import org.derpfest.changelog.ui.composables.DayHeader
 import org.derpfest.changelog.ui.composables.EmptyState
+import org.derpfest.changelog.ui.composables.FilterSheet
 import org.derpfest.changelog.viewmodels.ChangelogViewModel
 import java.util.Locale
 
@@ -82,6 +96,7 @@ fun ChangelogScreen(
 ) {
     val changelog by changelogViewModel.changelog.collectAsState()
     val entries by changelogViewModel.entries.collectAsState()
+    val filter by changelogViewModel.filter.collectAsState()
     val isRefreshing by changelogViewModel.isRefreshing.collectAsState()
     val error by changelogViewModel.error.collectAsState()
     val tapAction by changelogViewModel.tapAction.collectAsState()
@@ -91,6 +106,8 @@ fun ChangelogScreen(
 
     var selectedChange by remember { mutableStateOf<Change?>(null) }
     val expandedChangeIds = remember { mutableStateSetOf<String>() }
+    var showFilterSheet by rememberSaveable { mutableStateOf(false) }
+    var isToolbarExpanded by rememberSaveable { mutableStateOf(true) }
 
     val onOpen: (Change) -> Unit = { uriHandler.openUri(it.url) }
     val onShare: (Change) -> Unit = { context.shareLink(it.url, it.subject) }
@@ -137,7 +154,15 @@ fun ChangelogScreen(
                     Text(text = stringResource(R.string.app_name))
                 },
                 subtitle = {
-                    Text(text = stringResource(R.string.changelog_since_build, buildDate))
+                    Text(
+                        text = when (filter.period) {
+                            Period.SINCE_BUILD -> stringResource(
+                                R.string.changelog_since_build, buildDate
+                            )
+
+                            Period.LAST_30_DAYS -> stringResource(R.string.period_last_30_days)
+                        }
+                    )
                 },
                 scrollBehavior = scrollBehavior,
             )
@@ -171,6 +196,14 @@ fun ChangelogScreen(
                 }
             }
         },
+        floatingActionButton = {
+            ChangelogFloatingToolbar(
+                expanded = isToolbarExpanded,
+                onRefresh = { changelogViewModel.refresh() },
+                onShowFilters = { showFilterSheet = true },
+            )
+        },
+        floatingActionButtonPosition = FabPosition.Center,
     ) { innerPadding ->
         val currentEntries = entries
 
@@ -193,7 +226,36 @@ fun ChangelogScreen(
                 onOpen = onOpen,
                 onShare = onShare,
                 onCopyLink = onCopyLink,
+                emptyState = {
+                    when (filter.hidesChanges) {
+                        true -> EmptyState(
+                            icon = Icons.Filled.FilterAlt,
+                            title = stringResource(R.string.changelog_empty_filtered_title),
+                            modifier = it,
+                            text = stringResource(R.string.changelog_empty_filtered),
+                        )
+
+                        false -> EmptyState(
+                            icon = Icons.Filled.Inbox,
+                            title = stringResource(R.string.changelog_empty_title),
+                            modifier = it,
+                            text = stringResource(
+                                when (filter.period) {
+                                    Period.SINCE_BUILD -> R.string.changelog_empty_since_build
+                                    Period.LAST_30_DAYS -> R.string.changelog_empty_last_30_days
+                                }
+                            ),
+                        )
+                    }
+                },
                 contentPadding = innerPadding,
+                modifier = with(FloatingToolbarDefaults) {
+                    Modifier.floatingToolbarVerticalNestedScroll(
+                        expanded = isToolbarExpanded,
+                        onExpand = { isToolbarExpanded = true },
+                        onCollapse = { isToolbarExpanded = false },
+                    )
+                },
             )
 
             errorText != null && !isRefreshing -> EmptyState(
@@ -233,6 +295,17 @@ fun ChangelogScreen(
             onDismissRequest = { selectedChange = null },
         )
     }
+
+    if (showFilterSheet) {
+        FilterSheet(
+            filter = filter,
+            onPeriodChange = changelogViewModel::setPeriod,
+            onSourceShownChange = changelogViewModel::setSourceShown,
+            onShowTranslationsChange = changelogViewModel::setShowTranslations,
+            onShowMergesChange = changelogViewModel::setShowMerges,
+            onDismissRequest = { showFilterSheet = false },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -247,6 +320,7 @@ private fun ChangelogList(
     onOpen: (Change) -> Unit,
     onShare: (Change) -> Unit,
     onCopyLink: (Change) -> Unit,
+    emptyState: @Composable (Modifier) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
@@ -274,18 +348,16 @@ private fun ChangelogList(
             contentPadding = PaddingValues(
                 start = contentPadding.calculateStartPadding(layoutDirection) + 16.dp,
                 end = contentPadding.calculateEndPadding(layoutDirection) + 16.dp,
-                bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                // Leave room for the floating toolbar
+                bottom = contentPadding.calculateBottomPadding() +
+                        FloatingToolbarDefaults.ContainerSize +
+                        FloatingToolbarDefaults.ScreenOffset * 2,
             ),
             verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
         ) {
             if (entries.isEmpty()) {
                 item(key = "empty") {
-                    EmptyState(
-                        icon = Icons.Filled.Inbox,
-                        title = stringResource(R.string.changelog_empty_title),
-                        modifier = Modifier.fillParentMaxSize(),
-                        text = stringResource(R.string.changelog_empty_since_build),
-                    )
+                    emptyState(Modifier.fillParentMaxSize())
                 }
             }
 
@@ -314,6 +386,16 @@ private fun ChangelogList(
                             modifier = Modifier.animateItem(),
                         )
                     }
+
+                    is ChangelogEntry.BuildMarker -> item(
+                        key = entry.key,
+                        contentType = "build",
+                    ) {
+                        BuildMarker(
+                            time = entry.time,
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
                 }
             }
 
@@ -331,5 +413,61 @@ private fun ChangelogList(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BuildMarker(
+    time: Long,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val date = remember(time) {
+        DateUtils.formatDateTime(
+            context,
+            time,
+            DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH or
+                    DateUtils.FORMAT_SHOW_TIME,
+        )
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        HorizontalDivider(
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.primary,
+        )
+
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.PhoneAndroid,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+
+                Text(
+                    text = stringResource(R.string.changelog_your_build, date),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        }
+
+        HorizontalDivider(
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }

@@ -9,6 +9,9 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
+import org.derpfest.changelog.models.ChangeSource
+import org.derpfest.changelog.models.ChangesFilter
+import org.derpfest.changelog.models.Period
 import org.derpfest.changelog.models.TapAction
 
 fun <T> SharedPreferences.preferenceFlow(
@@ -33,6 +36,50 @@ fun <T> SharedPreferences.preferenceFlow(
         unregisterOnSharedPreferenceChangeListener(listener)
     }
 }
+
+// Filter prefs
+const val PERIOD_KEY = "period"
+private val PERIOD_DEFAULT = Period.SINCE_BUILD.ordinal
+var SharedPreferences.period: Period
+    get() = Period.entries[getInt(PERIOD_KEY, PERIOD_DEFAULT)]
+    set(value) = edit {
+        putInt(PERIOD_KEY, value.ordinal)
+    }
+
+const val SOURCES_KEY = "sources"
+private val SOURCES_DEFAULT = ChangeSource.entries.toSet()
+var SharedPreferences.sources: Set<ChangeSource>
+    get() = getStringSet(SOURCES_KEY, null)?.mapNotNullTo(mutableSetOf()) { name ->
+        ChangeSource.entries.firstOrNull { it.name == name }
+    } ?: SOURCES_DEFAULT
+    set(value) = edit {
+        putStringSet(SOURCES_KEY, value.mapTo(mutableSetOf()) { it.name })
+    }
+
+const val SHOW_TRANSLATIONS_KEY = "show_translations"
+private const val SHOW_TRANSLATIONS_DEFAULT = true
+var SharedPreferences.showTranslations: Boolean
+    get() = getBoolean(SHOW_TRANSLATIONS_KEY, SHOW_TRANSLATIONS_DEFAULT)
+    set(value) = edit {
+        putBoolean(SHOW_TRANSLATIONS_KEY, value)
+    }
+
+const val SHOW_MERGES_KEY = "show_merges"
+private const val SHOW_MERGES_DEFAULT = true
+var SharedPreferences.showMerges: Boolean
+    get() = getBoolean(SHOW_MERGES_KEY, SHOW_MERGES_DEFAULT)
+    set(value) = edit {
+        putBoolean(SHOW_MERGES_KEY, value)
+    }
+
+val CHANGES_FILTER_KEYS = arrayOf(PERIOD_KEY, SOURCES_KEY, SHOW_TRANSLATIONS_KEY, SHOW_MERGES_KEY)
+val SharedPreferences.changesFilter: ChangesFilter
+    get() = ChangesFilter(
+        period = period,
+        sources = sources,
+        showTranslations = showTranslations,
+        showMerges = showMerges,
+    )
 
 // List prefs
 const val TAP_ACTION_KEY = "tap_action"

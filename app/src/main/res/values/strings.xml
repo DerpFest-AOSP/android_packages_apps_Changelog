@@ -9,13 +9,30 @@
 
     <!-- Actions -->
     <string name="dismiss">Dismiss</string>
+    <string name="refresh">Refresh</string>
     <string name="retry">Retry</string>
 
     <!-- Changelog -->
-    <string name="changelog_since_build">Since your build, %1$s</string>
+    <string name="changelog_since_build">Since your build, <xliff:g id="date" example="Nov 12">%1$s</xliff:g></string>
+    <string name="changelog_your_build">Your build, <xliff:g id="date" example="Nov 12, 14:03">%1$s</xliff:g></string>
     <string name="changelog_empty_title">You\'re up to date</string>
     <string name="changelog_empty_since_build">Nothing got merged since your build. Pull down to check again.</string>
+    <string name="changelog_empty_last_30_days">Nothing got merged in the last 30 days. Pull down to check again.</string>
+    <string name="changelog_empty_filtered_title">No matching changes</string>
+    <string name="changelog_empty_filtered">The filters hide all changes of this time range.</string>
     <string name="changelog_truncated">Older changes are left out, there are too many of them</string>
+
+    <!-- Periods -->
+    <string name="period_since_build">Since your build</string>
+    <string name="period_last_30_days">Last 30 days</string>
+
+    <!-- Filters -->
+    <string name="filters">Filters</string>
+    <string name="filter_period">Time range</string>
+    <string name="filter_sources">Sources</string>
+    <string name="filter_types">Kinds of changes</string>
+    <string name="filter_translations">Translations</string>
+    <string name="filter_merges">Merge commits</string>
 
     <!-- Days -->
     <string name="day_today">Today</string>

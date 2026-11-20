@@ -39,4 +39,13 @@ sealed interface ChangelogEntry {
     ) : ChangelogEntry {
         override val key get() = change.id
     }
+
+    /**
+     * Marks when the build running on the device got made.
+     *
+     * @param time When the build got made, in milliseconds since the epoch
+     */
+    data class BuildMarker(val time: Long) : ChangelogEntry {
+        override val key get() = "build"
+    }
 }

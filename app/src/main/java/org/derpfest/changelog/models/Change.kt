@@ -52,4 +52,17 @@ data class Change(
             .removePrefix("proprietary_")
             .replaceFirst('_', '/')
             .replaceFirst('_', '/')
+
+    /**
+     * Whether the change only updates translations.
+     */
+    val isTranslation: Boolean
+        get() = translationRegex.containsMatchIn(subject)
+
+    companion object {
+        private val translationRegex = Regex(
+            """\b(translations?|crowdin|weblate|l10n|locali[sz]ations?)\b""",
+            RegexOption.IGNORE_CASE,
+        )
+    }
 }
