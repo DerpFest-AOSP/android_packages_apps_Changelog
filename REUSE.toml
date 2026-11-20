@@ -7,7 +7,7 @@ SPDX-PackageSupplier = "DerpFest AOSP"
 SPDX-PackageDownloadLocation = "https://github.com/DerpFest-AOSP/android_packages_apps_Changelog"
 
 [[annotations]]
-path = [".gitignore", "app/.gitignore"]
+path = [".github/workflows/**", ".gitignore", "app/.gitignore"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "DerpFest AOSP"
 SPDX-License-Identifier = "Apache-2.0"
