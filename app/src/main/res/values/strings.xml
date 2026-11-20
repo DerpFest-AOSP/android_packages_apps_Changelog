@@ -26,6 +26,14 @@
     <string name="period_since_build">Since your build</string>
     <string name="period_last_30_days">Last 30 days</string>
 
+    <!-- Search -->
+    <string name="search">Search</string>
+    <string name="search_hint">Search changes</string>
+    <string name="search_back">Close search</string>
+    <string name="search_clear">Clear</string>
+    <string name="search_empty_title">No matching changes</string>
+    <string name="search_empty">Nothing matches \"<xliff:g id="query" example="systemui">%1$s</xliff:g>\".</string>
+
     <!-- Filters -->
     <string name="filters">Filters</string>
     <string name="filter_period">Time range</string>

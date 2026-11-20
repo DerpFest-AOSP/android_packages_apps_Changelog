@@ -83,20 +83,34 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
     val changelog = changelogRepository.changelog
 
     /**
-     * The entries of the list, null until the changelog got loaded or fetched.
+     * The changes of the current period that match the filter, newest first.
      */
-    val entries = combine(changelog, filter) { changelog, filter ->
+    val filteredChanges = combine(changelog, filter) { changelog, filter ->
         changelog?.let {
             val since = filter.period.startTime(System.currentTimeMillis())
 
-            it.changes
-                .filter { change -> change.timestamp >= since && filter.matches(change) }
-                .toEntries(
-                    buildTime = Build.TIME.takeIf { time ->
-                        filter.period != Period.SINCE_BUILD && time >= since
-                    },
-                )
+            it.changes.filter { change ->
+                change.timestamp >= since && filter.matches(change)
+            }
         }
+    }
+        .flowOn(Dispatchers.Default)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = null,
+        )
+
+    /**
+     * The entries of the list, null until the changelog got loaded or fetched.
+     */
+    val entries = combine(filteredChanges, filter) { changes, filter ->
+        changes?.toEntries(
+            buildTime = Build.TIME.takeIf { time ->
+                val since = filter.period.startTime(System.currentTimeMillis())
+                filter.period != Period.SINCE_BUILD && time >= since
+            },
+        )
     }
         .flowOn(Dispatchers.Default)
         .stateIn(

@@ -53,6 +53,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,6 +61,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -71,6 +73,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import org.derpfest.changelog.R
 import org.derpfest.changelog.ext.copyLink
 import org.derpfest.changelog.ext.shareLink
@@ -82,6 +85,7 @@ import org.derpfest.changelog.models.TapAction
 import org.derpfest.changelog.ui.composables.ChangeDetailsSheet
 import org.derpfest.changelog.ui.composables.ChangeListItem
 import org.derpfest.changelog.ui.composables.ChangelogFloatingToolbar
+import org.derpfest.changelog.ui.composables.ChangelogSearchBar
 import org.derpfest.changelog.ui.composables.DayHeader
 import org.derpfest.changelog.ui.composables.EmptyState
 import org.derpfest.changelog.ui.composables.FilterSheet
@@ -95,6 +99,7 @@ fun ChangelogScreen(
     modifier: Modifier = Modifier,
 ) {
     val changelog by changelogViewModel.changelog.collectAsState()
+    val filteredChanges by changelogViewModel.filteredChanges.collectAsState()
     val entries by changelogViewModel.entries.collectAsState()
     val filter by changelogViewModel.filter.collectAsState()
     val isRefreshing by changelogViewModel.isRefreshing.collectAsState()
@@ -103,15 +108,26 @@ fun ChangelogScreen(
 
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
+    val scope = rememberCoroutineScope()
 
     var selectedChange by remember { mutableStateOf<Change?>(null) }
     val expandedChangeIds = remember { mutableStateSetOf<String>() }
     var showFilterSheet by rememberSaveable { mutableStateOf(false) }
     var isToolbarExpanded by rememberSaveable { mutableStateOf(true) }
+    val searchBarState = rememberSearchBarState()
 
     val onOpen: (Change) -> Unit = { uriHandler.openUri(it.url) }
     val onShare: (Change) -> Unit = { context.shareLink(it.url, it.subject) }
     val onCopyLink: (Change) -> Unit = { context.copyLink(it.url, it.subject) }
+    val onChangeClick: (Change) -> Unit = { change ->
+        when (tapAction) {
+            TapAction.DETAILS -> selectedChange = change
+
+            TapAction.EXPAND -> if (!expandedChangeIds.remove(change.id)) {
+                expandedChangeIds.add(change.id)
+            }
+        }
+    }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -200,6 +216,11 @@ fun ChangelogScreen(
             ChangelogFloatingToolbar(
                 expanded = isToolbarExpanded,
                 onRefresh = { changelogViewModel.refresh() },
+                onSearch = {
+                    scope.launch {
+                        searchBarState.animateToExpanded()
+                    }
+                },
                 onShowFilters = { showFilterSheet = true },
             )
         },
@@ -214,15 +235,7 @@ fun ChangelogScreen(
                 isTruncated = changelog?.isTruncated == true,
                 isRefreshing = isRefreshing,
                 onRefresh = { changelogViewModel.refresh() },
-                onChangeClick = { change ->
-                    when (tapAction) {
-                        TapAction.DETAILS -> selectedChange = change
-
-                        TapAction.EXPAND -> if (!expandedChangeIds.remove(change.id)) {
-                            expandedChangeIds.add(change.id)
-                        }
-                    }
-                },
+                onChangeClick = onChangeClick,
                 onOpen = onOpen,
                 onShare = onShare,
                 onCopyLink = onCopyLink,
@@ -285,6 +298,15 @@ fun ChangelogScreen(
             }
         }
     }
+
+    ChangelogSearchBar(
+        searchBarState = searchBarState,
+        changes = filteredChanges.orEmpty(),
+        onChangeClick = onChangeClick,
+        onOpen = onOpen,
+        onShare = onShare,
+        onCopyLink = onCopyLink,
+    )
 
     selectedChange?.let { change ->
         ChangeDetailsSheet(
