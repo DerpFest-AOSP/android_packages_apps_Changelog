@@ -13,6 +13,7 @@
     <string name="retry">Retry</string>
 
     <!-- Changelog -->
+    <string name="changelog_title" translatable="false">DerpFest Changelog</string>
     <string name="changelog_since_build">Since your build, <xliff:g id="date" example="Nov 12">%1$s</xliff:g></string>
     <string name="changelog_your_build">Your build, <xliff:g id="date" example="Nov 12, 14:03">%1$s</xliff:g></string>
     <string name="changelog_empty_title">You\'re up to date</string>

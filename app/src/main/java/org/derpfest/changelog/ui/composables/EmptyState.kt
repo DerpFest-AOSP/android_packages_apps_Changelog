@@ -20,6 +20,7 @@ import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -27,11 +28,12 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun EmptyState(
-    icon: ImageVector,
+    icon: ImageVector? = null,
     title: String,
     modifier: Modifier = Modifier,
     text: String? = null,
     action: (@Composable () -> Unit)? = null,
+    mark: Painter? = null,
 ) {
     Column(
         modifier = modifier.padding(32.dp),
@@ -47,12 +49,28 @@ fun EmptyState(
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-            )
+            val tint = MaterialTheme.colorScheme.onSecondaryContainer
+            if (mark != null) {
+                val size = mark.intrinsicSize
+                val aspect = if (size.width > 0f && size.height > 0f) {
+                    size.width / size.height
+                } else {
+                    1f
+                }
+                Icon(
+                    painter = mark,
+                    contentDescription = null,
+                    modifier = Modifier.size(width = 64.dp * aspect, height = 64.dp),
+                    tint = tint,
+                )
+            } else if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                    tint = tint,
+                )
+            }
         }
 
         Text(

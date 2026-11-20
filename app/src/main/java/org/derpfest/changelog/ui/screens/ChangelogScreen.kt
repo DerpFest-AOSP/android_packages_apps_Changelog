@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.FilterAlt
-import androidx.compose.material.icons.filled.Inbox
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -70,6 +69,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -171,7 +171,7 @@ fun ChangelogScreen(
         topBar = {
             LargeFlexibleTopAppBar(
                 title = {
-                    Text(text = stringResource(R.string.app_name))
+                    Text(text = stringResource(R.string.changelog_title))
                 },
                 subtitle = {
                     Text(
@@ -257,7 +257,7 @@ fun ChangelogScreen(
                         )
 
                         false -> EmptyState(
-                            icon = Icons.Filled.Inbox,
+                            mark = painterResource(R.drawable.ic_derp_owl),
                             title = stringResource(R.string.changelog_empty_title),
                             modifier = it,
                             text = stringResource(
