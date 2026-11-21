@@ -8,9 +8,6 @@ package org.derpfest.changelog.ui.screens
 import android.os.Build
 import android.text.format.DateFormat
 import android.text.format.DateUtils
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -42,6 +39,7 @@ import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBarValue
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDefaults
 import androidx.compose.material3.SnackbarDuration
@@ -70,7 +68,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
@@ -222,24 +219,23 @@ fun ChangelogScreen(
             }
         },
         floatingActionButton = {
-            val toolbarClearance = with(LocalDensity.current) { 64.dp.roundToPx() }
-            AnimatedVisibility(
+            val searchOpen = searchBarState.targetValue != SearchBarValue.Collapsed ||
+                    searchBarState.currentValue != SearchBarValue.Collapsed
+            ChangelogFloatingToolbar(
                 visible = isToolbarVisible,
-                enter = slideInVertically { it + toolbarClearance },
-                exit = slideOutVertically { it + toolbarClearance },
-            ) {
-                ChangelogFloatingToolbar(
-                    onRefresh = { changelogViewModel.refresh() },
-                    onSearch = {
-                        scope.launch {
-                            searchBarState.animateToExpanded()
-                        }
-                    },
-                    onShowFilters = { showFilterSheet = true },
-                    onShowDevices = onShowDevices,
-                    onShowSettings = onShowSettings,
-                )
-            }
+                // The toolbar window is above the activity, so it has to leave while a sheet or
+                // the search screen is open. Those cover it anyway.
+                covered = showFilterSheet || selectedChange != null || searchOpen,
+                onRefresh = { changelogViewModel.refresh() },
+                onSearch = {
+                    scope.launch {
+                        searchBarState.animateToExpanded()
+                    }
+                },
+                onShowFilters = { showFilterSheet = true },
+                onShowDevices = onShowDevices,
+                onShowSettings = onShowSettings,
+            )
         },
         floatingActionButtonPosition = FabPosition.Center,
     ) { innerPadding ->

@@ -10,9 +10,9 @@
     </style>
 
     <!--
-        Sheet-sized window that blurs only what is behind the sheet. It has to be translucent or
-        the background blur is ignored, and it must not dim or take touches: the sheet dialog in
-        front of it does both.
+        Window that blurs only its own bounds. It has to be translucent or the background blur is
+        ignored. The sheet uses one of these behind its dialog and does not take touches. The
+        toolbar is this window itself, so its icons draw on top of the blur.
     -->
     <style name="Theme.Changelog.SheetBlur" parent="@android:style/Theme.DeviceDefault.Dialog">
         <item name="android:windowIsFloating">true</item>

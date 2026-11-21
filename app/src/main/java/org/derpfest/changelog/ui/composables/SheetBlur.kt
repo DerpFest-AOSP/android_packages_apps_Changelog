@@ -364,6 +364,32 @@ private fun SheetState.currentOffset(): Float? {
     }
 }
 
+/**
+ * Whether the sheet and the toolbar should blur, and the frost drawn over that blur.
+ *
+ * @param active Cross-window blur can be drawn right now
+ * @param frosted surface_effect_0 composited over surface_effect_2
+ */
+internal class SurfaceBlur(
+    val active: Boolean,
+    val frosted: Color,
+)
+
+/**
+ * The blur policy shared by the sheet and the floating toolbar.
+ */
+@Composable
+internal fun rememberSurfaceBlur(): SurfaceBlur {
+    val context = LocalContext.current
+    val dark = isSystemInDarkTheme()
+    val policy = remember(dark) { sheetBlurPolicy(context, dark) }
+    val crossWindowBlur = rememberCrossWindowBlurEnabled()
+    return SurfaceBlur(
+        active = policy.eligible && crossWindowBlur,
+        frosted = policy.frosted,
+    )
+}
+
 private fun View.dialogWindow(): Window? {
     var current: View? = this
     while (current != null) {
@@ -516,7 +542,7 @@ private fun systemColor(context: Context, name: String): Int? {
 private const val TAG = "SheetBlur"
 
 /** Matches frameworks/base SystemUI R.dimen.bottomsheet_blur_radius. */
-private val SheetBlurRadius = 30.dp
+internal val SheetBlurRadius = 30.dp
 
 /** Matches frameworks/base SystemUI R.dimen.bottom_sheet_corner_radius. */
 private val SheetCornerRadius = 28.dp
