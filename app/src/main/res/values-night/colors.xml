@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: DerpFest AOSP
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <color name="splash_background">@android:color/system_surface_dark</color>
+    <color name="splash_mark">@android:color/system_secondary_container_dark</color>
+    <color name="splash_mark_icon">@android:color/system_on_secondary_container_dark</color>
+</resources>
