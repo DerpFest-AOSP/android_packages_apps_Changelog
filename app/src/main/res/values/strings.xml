@@ -16,6 +16,7 @@
     <string name="changelog_title" translatable="false">DerpFest Changelog</string>
     <string name="changelog_since_build">Since your build, <xliff:g id="date" example="Nov 12">%1$s</xliff:g></string>
     <string name="changelog_your_build">Your build, <xliff:g id="date" example="Nov 12, 14:03">%1$s</xliff:g></string>
+    <string name="changelog_this_device">This device · <xliff:g id="model" example="Pixel 9 Pro XL">%1$s</xliff:g></string>
     <string name="changelog_empty_title">You\'re up to date</string>
     <string name="changelog_empty_since_build">Nothing got merged since your build. Pull down to check again.</string>
     <string name="changelog_empty_last_30_days">Nothing got merged in the last 30 days. Pull down to check again.</string>

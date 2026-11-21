@@ -128,14 +128,19 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
         filter,
         showAllDevices,
         devicesRepository.watchedRepositories,
-    ) { changelog, filter, showAllDevices, watchedRepositories ->
+        devicesRepository.thisDeviceRepositories,
+    ) { changelog, filter, showAllDevices, watchedRepositories, thisDeviceRepositories ->
         changelog?.let {
             val since = filter.period.startTime(System.currentTimeMillis())
 
             it.changes.filter { change ->
                 change.timestamp >= since &&
                         filter.matches(change) &&
-                        change.matchesDeviceFilter(showAllDevices, watchedRepositories)
+                        change.matchesDeviceFilter(
+                            showAllDevices,
+                            watchedRepositories,
+                            thisDeviceRepositories,
+                        )
             }
         }
     }
@@ -149,12 +154,18 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
     /**
      * The entries of the list, null until the changelog got loaded or fetched.
      */
-    val entries = combine(filteredChanges, filter) { changes, filter ->
+    val entries = combine(
+        filteredChanges,
+        filter,
+        devicesRepository.thisDeviceRepositories,
+    ) { changes, filter, thisDeviceRepositories ->
         changes?.toEntries(
             buildTime = Build.TIME.takeIf { time ->
                 val since = filter.period.startTime(System.currentTimeMillis())
                 filter.period != Period.SINCE_BUILD && time >= since
             },
+            deviceName = Build.MODEL.ifBlank { Build.DEVICE },
+            deviceRepositories = thisDeviceRepositories.orEmpty(),
         )
     }
         .flowOn(Dispatchers.Default)
@@ -253,13 +264,25 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
 
     companion object {
         /**
-         * Group the changes by the day they got merged on, keeping their order.
+         * Group the changes by the day they got merged on, keeping their order. Changes of the
+         * device running the app come first.
          *
          * @param buildTime When the running build got made, to mark it among the changes
+         * @param deviceName The name of the device running the app
+         * @param deviceRepositories The repositories of that device, as `owner/name` in lower case
          */
-        private fun List<Change>.toEntries(buildTime: Long?): List<ChangelogEntry> {
+        private fun List<Change>.toEntries(
+            buildTime: Long?,
+            deviceName: String,
+            deviceRepositories: Set<String>,
+        ): List<ChangelogEntry> {
             if (isEmpty()) {
                 return emptyList()
+            }
+
+            val (pinned, rest) = when {
+                deviceRepositories.isEmpty() -> emptyList<Change>() to this
+                else -> partition { it.repository.lowercase() in deviceRepositories }
             }
 
             val zoneId = ZoneId.systemDefault()
@@ -267,7 +290,28 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
             var isBuildMarked = buildTime == null
 
             return buildList {
-                this@toEntries.groupBy {
+                if (pinned.isNotEmpty()) {
+                    val (newerChanges, olderChanges) = when (isBuildMarked) {
+                        true -> pinned to emptyList()
+                        false -> pinned.partition { it.timestamp >= buildTime!! }
+                    }
+
+                    if (newerChanges.isEmpty()) {
+                        addBuildMarker(buildTime, isBuildMarked)
+                        isBuildMarked = true
+                    }
+
+                    add(ChangelogEntry.DeviceSection(deviceName))
+                    addItems(newerChanges)
+
+                    if (olderChanges.isNotEmpty()) {
+                        addBuildMarker(buildTime, isBuildMarked)
+                        isBuildMarked = true
+                        addItems(olderChanges)
+                    }
+                }
+
+                rest.groupBy {
                     Instant.ofEpochMilli(it.timestamp).atZone(zoneId).toLocalDate()
                 }.forEach { (date, changes) ->
                     val (newerChanges, olderChanges) = when (isBuildMarked) {
@@ -319,10 +363,12 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
         private fun Change.matchesDeviceFilter(
             showAllDevices: Boolean,
             watchedRepositories: Set<String>?,
+            thisDeviceRepositories: Set<String>?,
         ) = when {
             source != ChangeSource.DEVICES -> true
             showAllDevices -> true
-            // Hide device changes until the watched repositories are known
+            thisDeviceRepositories != null && repository.lowercase() in thisDeviceRepositories -> true
+            // Hide other device changes until the watched repositories are known
             watchedRepositories == null -> false
             else -> repository.lowercase() in watchedRepositories
         }

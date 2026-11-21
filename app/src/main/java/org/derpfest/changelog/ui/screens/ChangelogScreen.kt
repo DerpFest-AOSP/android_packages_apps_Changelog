@@ -91,6 +91,7 @@ import org.derpfest.changelog.ui.composables.ChangeListItem
 import org.derpfest.changelog.ui.composables.ChangelogFloatingToolbar
 import org.derpfest.changelog.ui.composables.ChangelogSearchBar
 import org.derpfest.changelog.ui.composables.DayHeader
+import org.derpfest.changelog.ui.composables.ListSectionHeader
 import org.derpfest.changelog.ui.composables.EmptyState
 import org.derpfest.changelog.ui.composables.FilterSheet
 import org.derpfest.changelog.viewmodels.ChangelogViewModel
@@ -407,6 +408,16 @@ private fun ChangelogList(
 
             entries.forEach { entry ->
                 when (entry) {
+                    is ChangelogEntry.DeviceSection -> item(
+                        key = entry.key,
+                        contentType = "device",
+                    ) {
+                        ListSectionHeader(
+                            text = stringResource(R.string.changelog_this_device, entry.name),
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
+
                     is ChangelogEntry.Day -> stickyHeader(
                         key = entry.key,
                         contentType = "day",

@@ -26,6 +26,15 @@ sealed interface ChangelogEntry {
     }
 
     /**
+     * The changes of the device running the app, kept above the days.
+     *
+     * @param name The name of the device
+     */
+    data class DeviceSection(val name: String) : ChangelogEntry {
+        override val key get() = "this_device"
+    }
+
+    /**
      * A change, part of the group of changes of a day.
      *
      * @param change The change

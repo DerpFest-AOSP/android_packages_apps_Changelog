@@ -125,6 +125,15 @@ class DevicesViewModel(application: Application) : AndroidViewModel(application)
             }
         }
 
+        // The running device stays pinned on the changelog, apart from the watched devices.
+        viewModelScope.launch {
+            try {
+                devicesRepository.resolveThisDevice()
+            } catch (_: ChangelogError) {
+                // The changelog keeps its order until the repositories can be resolved
+            }
+        }
+
         viewModelScope.launch {
             combine(
                 sharedPreferences.preferenceFlow(

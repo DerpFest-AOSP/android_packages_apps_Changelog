@@ -64,6 +64,14 @@ class DevicesRepository(context: Context) {
      */
     val watchedRepositories = _watchedRepositories.asStateFlow()
 
+    private val _thisDeviceRepositories = MutableStateFlow<Set<String>?>(null)
+
+    /**
+     * The DerpFest-Devices repositories of the device running the app, as `owner/name` in lower
+     * case. Null until they got resolved.
+     */
+    val thisDeviceRepositories = _thisDeviceRepositories.asStateFlow()
+
     /**
      * Load the devices kept from the last refresh.
      */
@@ -93,9 +101,25 @@ class DevicesRepository(context: Context) {
      * @throws ChangelogError If the repositories couldn't be resolved
      */
     suspend fun resolveRepositories(codenames: Set<String>): Set<String> = mutex.withLock {
+        val resolved = resolveLocked(codenames)
+        _watchedRepositories.value = resolved
+        resolved
+    }
+
+    /**
+     * Resolve the DerpFest-Devices repositories of the device running the app.
+     *
+     * @throws ChangelogError If the repositories couldn't be resolved
+     */
+    suspend fun resolveThisDevice(): Set<String> = mutex.withLock {
+        val resolved = resolveLocked(setOf(thisDeviceCodename))
+        _thisDeviceRepositories.value = resolved
+        resolved
+    }
+
+    private suspend fun resolveLocked(codenames: Set<String>): Set<String> {
         if (codenames.isEmpty()) {
-            _watchedRepositories.value = emptySet()
-            return@withLock emptySet()
+            return emptySet()
         }
 
         val repositories = loadRepositoriesLocked(force = false)
@@ -118,6 +142,7 @@ class DevicesRepository(context: Context) {
                 continue
             }
 
+            // lineage.dependencies and derp.dependencies together name the shared trees.
             val dependencies = try {
                 dataSource.getDependencies(repository.name, repository.defaultBranch)
             } catch (e: ChangelogError) {
@@ -134,8 +159,7 @@ class DevicesRepository(context: Context) {
             }.forEach(queue::addLast)
         }
 
-        _watchedRepositories.value = resolved
-        resolved
+        return resolved
     }
 
     private suspend fun loadDevicesLocked(force: Boolean): List<Device> {

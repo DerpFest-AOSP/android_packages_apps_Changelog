@@ -32,7 +32,7 @@ fun DayHeader(
 ) {
     val today = remember { LocalDate.now() }
 
-    Text(
+    ListSectionHeader(
         text = when (date) {
             today -> stringResource(R.string.day_today)
             today.minusDays(1) -> stringResource(R.string.day_yesterday)
@@ -49,6 +49,23 @@ fun DayHeader(
                 )
             }
         },
+        modifier = modifier,
+    )
+}
+
+/**
+ * A heading that groups changes in the changelog list.
+ *
+ * @param text The heading
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun ListSectionHeader(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = text,
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)

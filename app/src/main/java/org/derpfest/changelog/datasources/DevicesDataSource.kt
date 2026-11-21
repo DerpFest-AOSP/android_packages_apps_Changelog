@@ -95,6 +95,10 @@ class DevicesDataSource(
     /**
      * Fetch the repositories a device tree depends on.
      *
+     * Shared trees are not named after the device. Komodo lists caimito in derp.dependencies,
+     * and caimito lists zumapro. Both dependency files use the same repository entries, so a
+     * missing file just adds nothing.
+     *
      * @param repository The name of the repository
      * @param branch The branch to read
      * @return The names of the repositories, or an empty list if none are declared
@@ -105,11 +109,21 @@ class DevicesDataSource(
         repository: String,
         branch: String,
     ): List<String> = withContext(Dispatchers.IO) {
+        DEPENDENCY_FILES.flatMap { file ->
+            readDependencyFile(repository, branch, file)
+        }.distinct()
+    }
+
+    private fun readDependencyFile(
+        repository: String,
+        branch: String,
+        file: String,
+    ): List<String> {
         val url = URI(
-            "https://raw.githubusercontent.com/$organization/$repository/$branch/lineage.dependencies"
+            "https://raw.githubusercontent.com/$organization/$repository/$branch/$file"
         ).toURL()
 
-        try {
+        return try {
             json.decodeFromString<List<DependencyResponse>>(url.fetch()).map { it.repository }
         } catch (e: ChangelogError.Http) {
             if (e.code == 404) {
@@ -157,5 +171,10 @@ class DevicesDataSource(
 
     companion object {
         private const val REPOS_PER_PAGE = 100
+
+        private val DEPENDENCY_FILES = listOf(
+            "lineage.dependencies",
+            "derp.dependencies",
+        )
     }
 }
