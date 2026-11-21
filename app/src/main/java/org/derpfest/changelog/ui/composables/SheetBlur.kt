@@ -73,7 +73,8 @@ import org.derpfest.changelog.R
 /**
  * Bottom sheet used by the changelog.
  *
- * The media panel blurs only the sheet, with the same frosted tint as the volume panel. A blur
+ * The media panel blurs only the sheet. The frost is the volume panel tint, opened slightly so
+ * the list reads through. A blur
  * behind flag on the sheet dialog cannot do that: that dialog is full screen, so the blur lands
  * on the list outside the sheet and the sheet itself is only a translucent color. The blur
  * therefore lives on its own window, sized and placed to the sheet.
@@ -497,7 +498,8 @@ private fun readSystemBoolean(name: String): Boolean? {
  * surface_effect_0 composited over surface_effect_2, the media panel's sheet color.
  *
  * The framework colors already carry the right alpha (dark: primary tone 20 at 50% over tone 90
- * at 15%). The public accent shade numbers run the other way — accent1_200 is tone 80, not tone
+ * at 15%). That composite is then opened slightly so the list reads through the sheet and the
+ * toolbar. The public accent shade numbers run the other way — accent1_200 is tone 80, not tone
  * 20 — so the fallback maps tone to shade explicitly.
  */
 private fun frostedSheetColor(context: Context, dark: Boolean): Int {
@@ -509,7 +511,7 @@ private fun frostedSheetColor(context: Context, dark: Boolean): Int {
         android.graphics.Color.alpha(effect0) != 0xFF &&
         android.graphics.Color.alpha(effect2) != 0xFF
     ) {
-        return ColorUtils.compositeColors(effect0, effect2)
+        return thinFrost(ColorUtils.compositeColors(effect0, effect2))
     }
     val primary = if (dark) {
         android.R.color.system_accent1_800 to android.R.color.system_accent1_100
@@ -525,7 +527,23 @@ private fun frostedSheetColor(context: Context, dark: Boolean): Int {
         ((if (dark) SURFACE_EFFECT_2_ALPHA_DARK else SURFACE_EFFECT_2_ALPHA_LIGHT) * 255)
             .roundToInt(),
     )
-    return ColorUtils.compositeColors(overlay, under)
+    return thinFrost(ColorUtils.compositeColors(overlay, under))
+}
+
+/**
+ * Fraction of the volume-panel frost kept on the sheet and the toolbar. A little under 1
+ * lets the blurred list show through without changing the tint.
+ */
+private const val FROST_SCALE = 0.8f
+
+private fun thinFrost(color: Int): Int {
+    val alpha = (android.graphics.Color.alpha(color) * FROST_SCALE).roundToInt()
+    return android.graphics.Color.argb(
+        alpha.coerceIn(0, 255),
+        android.graphics.Color.red(color),
+        android.graphics.Color.green(color),
+        android.graphics.Color.blue(color),
+    )
 }
 
 private fun systemColor(context: Context, name: String): Int? {

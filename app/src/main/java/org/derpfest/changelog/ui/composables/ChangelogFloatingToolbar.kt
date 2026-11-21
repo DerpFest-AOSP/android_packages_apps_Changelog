@@ -73,12 +73,6 @@ import org.derpfest.changelog.R
  */
 private val ToolbarSlideClearance = 64.dp
 
-/**
- * Fraction of the sheet frost kept on the toolbar. A little under 1 lets the blurred list
- * show through without changing the tint.
- */
-private const val TOOLBAR_FROST_SCALE = 0.8f
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChangelogFloatingToolbar(
@@ -154,8 +148,8 @@ fun ChangelogFloatingToolbar(
     val blurWindow = remember { ToolbarBlurWindow(context) }
     val slidePx = with(LocalDensity.current) { slide.roundToPx() }
     val radiusPx = with(LocalDensity.current) { SheetBlurRadius.roundToPx() }
-    // Same frost as the sheets, opened slightly so the list reads through the pill.
-    val frosted = thinToolbarFrost(blur.frosted.toArgb())
+    // Same frost as the sheets.
+    val frosted = blur.frosted.toArgb()
 
     DisposableEffect(blurWindow) {
         blurWindow.show()
@@ -401,16 +395,6 @@ private class ToolbarBlurWindow(
             view = view.parent as? View
         }
     }
-}
-
-private fun thinToolbarFrost(color: Int): Int {
-    val alpha = (android.graphics.Color.alpha(color) * TOOLBAR_FROST_SCALE).roundToInt()
-    return android.graphics.Color.argb(
-        alpha.coerceIn(0, 255),
-        android.graphics.Color.red(color),
-        android.graphics.Color.green(color),
-        android.graphics.Color.blue(color),
-    )
 }
 
 private tailrec fun Context.findActivity(): ComponentActivity {
