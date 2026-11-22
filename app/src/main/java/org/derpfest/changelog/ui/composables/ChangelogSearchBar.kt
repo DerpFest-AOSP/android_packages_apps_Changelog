@@ -56,6 +56,7 @@ import org.derpfest.changelog.models.Change
 fun ChangelogSearchBar(
     searchBarState: SearchBarState,
     changes: List<Change>,
+    expandedChangeIds: Set<String>,
     newChangeIds: Set<String>,
     highlightNew: Boolean,
     onChangeClick: (Change) -> Unit,
@@ -157,7 +158,7 @@ fun ChangelogSearchBar(
                         change = change,
                         index = index,
                         count = results.size,
-                        isExpanded = false,
+                        isExpanded = change.id in expandedChangeIds,
                         isNew = highlightNew && change.id in newChangeIds,
                         onClick = { onChangeClick(change) },
                         onOpen = { onOpen(change) },

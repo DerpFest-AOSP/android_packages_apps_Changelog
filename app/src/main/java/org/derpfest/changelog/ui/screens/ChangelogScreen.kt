@@ -408,6 +408,7 @@ fun ChangelogScreen(
     ChangelogSearchBar(
         searchBarState = searchBarState,
         changes = filteredChanges.orEmpty(),
+        expandedChangeIds = expandedChangeIds,
         newChangeIds = newChangeIds,
         highlightNew = highlightNew,
         onChangeClick = onChangeClick,
