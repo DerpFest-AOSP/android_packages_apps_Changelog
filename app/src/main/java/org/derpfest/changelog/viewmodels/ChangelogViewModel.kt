@@ -143,8 +143,7 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
         filter,
         showAllDevices,
         devicesRepository.watchedRepositories,
-        devicesRepository.thisDeviceRepositories,
-    ) { changelog, filter, showAllDevices, watchedRepositories, thisDeviceRepositories ->
+    ) { changelog, filter, showAllDevices, watchedRepositories ->
         changelog?.let {
             val since = filter.period.startTime(System.currentTimeMillis())
 
@@ -154,7 +153,6 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
                         change.matchesDeviceFilter(
                             showAllDevices,
                             watchedRepositories,
-                            thisDeviceRepositories,
                         )
             }
         }
@@ -383,12 +381,10 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
         private fun Change.matchesDeviceFilter(
             showAllDevices: Boolean,
             watchedRepositories: Set<String>?,
-            thisDeviceRepositories: Set<String>?,
         ) = when {
             source != ChangeSource.DEVICES -> true
             showAllDevices -> true
-            thisDeviceRepositories != null && repository.lowercase() in thisDeviceRepositories -> true
-            // Hide other device changes until the watched repositories are known
+            // Hide device changes until the watched repositories are known
             watchedRepositories == null -> false
             else -> repository.lowercase() in watchedRepositories
         }

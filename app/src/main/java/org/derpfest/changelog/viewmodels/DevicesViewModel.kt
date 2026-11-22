@@ -125,7 +125,7 @@ class DevicesViewModel(application: Application) : AndroidViewModel(application)
             }
         }
 
-        // The running device stays pinned on the changelog, apart from the watched devices.
+        // Resolved on its own so its changes can be pinned while it is watched.
         viewModelScope.launch {
             try {
                 devicesRepository.resolveThisDevice()
