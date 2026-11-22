@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: DerpFest AOSP
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- Actions -->
+    <string name="dismiss">Schließen</string>
+    <string name="refresh">Aktualisieren</string>
+    <string name="retry">Wiederholen</string>
+
+    <!-- Changelog -->
+    <string name="changelog_since_build">Seit deinem Build, <xliff:g id="date" example="12. Nov.">%1$s</xliff:g></string>
+    <string name="changelog_your_build">Dein Build, <xliff:g id="date" example="12. Nov., 14:03">%1$s</xliff:g></string>
+    <string name="changelog_this_device">Dieses Gerät · <xliff:g id="model" example="Pixel 9 Pro XL">%1$s</xliff:g></string>
+    <string name="changelog_empty_title">Du bist auf dem neuesten Stand</string>
+    <string name="changelog_empty_since_build">Seit deinem Build wurde nichts zusammengeführt. Zum Aktualisieren nach unten ziehen.</string>
+    <string name="changelog_empty_last_30_days">In den letzten 30 Tagen wurde nichts zusammengeführt. Zum Aktualisieren nach unten ziehen.</string>
+    <string name="changelog_empty_filtered_title">Keine passenden Änderungen</string>
+    <string name="changelog_empty_filtered">Die Filter blenden alle Änderungen dieses Zeitraums aus.</string>
+    <string name="changelog_truncated">Ältere Änderungen fehlen, es sind zu viele</string>
+
+    <!-- Periods -->
+    <string name="period_since_build">Seit deinem Build</string>
+    <string name="period_last_30_days">Letzte 30 Tage</string>
+
+    <!-- Search -->
+    <string name="search">Suchen</string>
+    <string name="search_hint">Änderungen suchen</string>
+    <string name="search_back">Suche schließen</string>
+    <string name="search_clear">Löschen</string>
+    <string name="search_empty_title">Keine passenden Änderungen</string>
+    <string name="search_empty">Nichts entspricht „<xliff:g id="query" example="systemui">%1$s</xliff:g>“.</string>
+
+    <!-- Devices -->
+    <string name="devices">Geräte</string>
+    <string name="back">Zurück</string>
+    <string name="devices_search_hint">Geräte suchen</string>
+    <string name="devices_show_all">Alle Geräte</string>
+    <string name="devices_show_all_summary">Änderungen aller DerpFest-Devices-Repositories anzeigen</string>
+    <string name="devices_this_device">Dieses Gerät</string>
+    <string name="devices_watched">Beobachtet</string>
+    <string name="devices_maintainer">Betreut von <xliff:g id="maintainer" example="Jemand">%1$s</xliff:g></string>
+    <string name="devices_empty_title">Keine passenden Geräte</string>
+    <string name="devices_empty">Nichts entspricht „<xliff:g id="query" example="pixel">%1$s</xliff:g>“.</string>
+    <string name="devices_error_title">Die Geräte konnten nicht geladen werden</string>
+
+    <!-- Settings -->
+    <string name="settings">Einstellungen</string>
+    <string name="settings_list">Änderungsliste</string>
+    <string name="settings_tap_action">Tippaktion</string>
+    <string name="tap_action_details">Details</string>
+    <string name="tap_action_details_summary">Ein Fenster mit der gesamten Commit-Nachricht öffnen</string>
+    <string name="tap_action_expand">Ausklappen</string>
+    <string name="tap_action_expand_summary">Die Änderung in der Liste ausklappen</string>
+    <string name="settings_highlight_new">Neue Änderungen hervorheben</string>
+    <string name="settings_highlight_new_summary">Änderungen markieren, die seit dem Start der App hinzugekommen sind</string>
+    <string name="settings_about">Über</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_source_code">Quellcode</string>
+    <string name="settings_website">Website</string>
+
+    <!-- Filters -->
+    <string name="filters">Filter</string>
+    <string name="filter_period">Zeitraum</string>
+    <string name="filter_sources">Quellen</string>
+    <string name="filter_types">Arten von Änderungen</string>
+    <string name="filter_translations">Übersetzungen</string>
+    <string name="filter_merges">Merge-Commits</string>
+
+    <!-- Days -->
+    <string name="day_today">Heute</string>
+    <string name="day_yesterday">Gestern</string>
+
+    <!-- Changes -->
+    <string name="change_author_time"><xliff:g id="author" example="John Doe">%1$s</xliff:g> · <xliff:g id="time" example="14:03">%2$s</xliff:g></string>
+    <string name="change_new">Neu</string>
+
+    <!-- Change actions -->
+    <string name="change_actions">Aktionen anzeigen</string>
+    <string name="change_open_github">Auf GitHub öffnen</string>
+    <string name="change_open_gerrit">In Gerrit öffnen</string>
+    <string name="change_share">Teilen</string>
+    <string name="change_copy_link">Link kopieren</string>
+
+    <!-- Change details -->
+    <string name="change_details_repository">Repository</string>
+    <string name="change_details_path">Pfad</string>
+    <string name="change_details_branch">Branch</string>
+    <string name="change_details_author">Autor</string>
+    <string name="change_details_date">Datum</string>
+    <string name="change_details_commit">Commit</string>
+
+    <!-- Sources -->
+    <string name="source_derpfest">DerpFest</string>
+    <string name="source_lineageos">LineageOS</string>
+    <string name="source_devices">Geräte</string>
+
+    <!-- Errors -->
+    <string name="error_title">Der Changelog konnte nicht geladen werden</string>
+    <string name="error_network">Prüfe deine Internetverbindung und versuche es noch einmal.</string>
+    <plurals name="error_rate_limited">
+        <item quantity="one">Das GitHub-Anfragelimit wurde erreicht. Versuche es in <xliff:g id="minutes" example="1">%1$d</xliff:g> Minute noch einmal.</item>
+        <item quantity="other">Das GitHub-Anfragelimit wurde erreicht. Versuche es in <xliff:g id="minutes" example="5">%1$d</xliff:g> Minuten noch einmal.</item>
+    </plurals>
+    <string name="error_rate_limit_over">Das GitHub-Anfragelimit wurde zurückgesetzt. Versuche es jetzt noch einmal.</string>
+    <string name="error_http">Der Server hat mit Fehler <xliff:g id="code" example="500">%1$d</xliff:g> geantwortet.</string>
+    <string name="error_invalid_response">Der Server hat eine Antwort gesendet, die nicht gelesen werden konnte.</string>
+</resources>
