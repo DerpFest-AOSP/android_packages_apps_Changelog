@@ -56,6 +56,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -85,8 +86,9 @@ import org.derpfest.changelog.models.Period
 import org.derpfest.changelog.models.TapAction
 import org.derpfest.changelog.ui.composables.ChangeDetailsSheet
 import org.derpfest.changelog.ui.composables.ChangeListItem
-import org.derpfest.changelog.ui.composables.ChangelogFloatingToolbar
 import org.derpfest.changelog.ui.composables.ChangelogSearchBar
+import org.derpfest.changelog.ui.composables.ChangelogToolbarAnchor
+import org.derpfest.changelog.ui.composables.ChangelogToolbarHost
 import org.derpfest.changelog.ui.composables.DayHeader
 import org.derpfest.changelog.ui.composables.ListSectionHeader
 import org.derpfest.changelog.ui.composables.EmptyState
@@ -100,6 +102,7 @@ fun ChangelogScreen(
     changelogViewModel: ChangelogViewModel,
     onShowDevices: () -> Unit,
     onShowSettings: () -> Unit,
+    toolbarHost: ChangelogToolbarHost,
     modifier: Modifier = Modifier,
 ) {
     val changelog by changelogViewModel.changelog.collectAsState()
@@ -148,6 +151,18 @@ fun ChangelogScreen(
     val hasChangelog = changelog != null
     val errorText = error?.text
     val retry = stringResource(R.string.retry)
+    val searchOpen = searchBarState.targetValue != SearchBarValue.Collapsed ||
+            searchBarState.currentValue != SearchBarValue.Collapsed
+
+    SideEffect {
+        toolbarHost.expanded = isToolbarVisible
+        toolbarHost.covered = showFilterSheet || selectedChange != null || searchOpen
+        toolbarHost.onRefresh = { changelogViewModel.refresh() }
+        toolbarHost.onSearch = { scope.launch { searchBarState.animateToExpanded() } }
+        toolbarHost.onShowFilters = { showFilterSheet = true }
+        toolbarHost.onShowDevices = onShowDevices
+        toolbarHost.onShowSettings = onShowSettings
+    }
 
     // Without a changelog the error takes the whole screen instead
     LaunchedEffect(errorText != null, hasChangelog) {
@@ -219,23 +234,7 @@ fun ChangelogScreen(
             }
         },
         floatingActionButton = {
-            val searchOpen = searchBarState.targetValue != SearchBarValue.Collapsed ||
-                    searchBarState.currentValue != SearchBarValue.Collapsed
-            ChangelogFloatingToolbar(
-                visible = isToolbarVisible,
-                // The toolbar window is above the activity, so it has to leave while a sheet or
-                // the search screen is open. Those cover it anyway.
-                covered = showFilterSheet || selectedChange != null || searchOpen,
-                onRefresh = { changelogViewModel.refresh() },
-                onSearch = {
-                    scope.launch {
-                        searchBarState.animateToExpanded()
-                    }
-                },
-                onShowFilters = { showFilterSheet = true },
-                onShowDevices = onShowDevices,
-                onShowSettings = onShowSettings,
-            )
+            ChangelogToolbarAnchor(onBounds = { toolbarHost.bounds = it })
         },
         floatingActionButtonPosition = FabPosition.Center,
     ) { innerPadding ->

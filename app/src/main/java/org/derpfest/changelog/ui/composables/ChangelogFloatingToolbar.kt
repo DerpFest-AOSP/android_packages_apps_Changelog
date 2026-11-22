@@ -14,17 +14,17 @@ import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Devices
@@ -39,15 +39,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.boundsInWindow
@@ -59,11 +62,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import kotlin.math.abs
 import kotlin.math.roundToInt
 import org.derpfest.changelog.ui.theme.ChangelogTheme
 import org.derpfest.changelog.R
@@ -73,57 +79,41 @@ import org.derpfest.changelog.R
  */
 private val ToolbarSlideClearance = 64.dp
 
+/**
+ * Toolbar position and clicks, owned above the page transition.
+ *
+ * The blur toolbar is a separate window, so it is not faded with the changelog page. The page
+ * reports into this host, and the toolbar stays composed so it can slide off as the page changes
+ * and slide back when that page returns.
+ */
+class ChangelogToolbarHost {
+    var expanded by mutableStateOf(true)
+    var covered by mutableStateOf(false)
+    var bounds by mutableStateOf<Rect?>(null)
+    var onRefresh: () -> Unit = {}
+    var onSearch: () -> Unit = {}
+    var onShowFilters: () -> Unit = {}
+    var onShowDevices: () -> Unit = {}
+    var onShowSettings: () -> Unit = {}
+}
+
+/**
+ * Invisible stand-in for the toolbar in the scaffold slot. Its bounds are where the window sits.
+ * The icons are measured and not drawn: the window draws them, and a fill here would hide the blur.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-fun ChangelogFloatingToolbar(
-    visible: Boolean,
-    covered: Boolean,
-    onRefresh: () -> Unit,
-    onSearch: () -> Unit,
-    onShowFilters: () -> Unit,
-    onShowDevices: () -> Unit,
-    onShowSettings: () -> Unit,
+fun ChangelogToolbarAnchor(
+    onBounds: (Rect) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val blur = rememberSurfaceBlur()
-    if (!blur.active) {
-        val clearance = with(LocalDensity.current) { ToolbarSlideClearance.roundToPx() }
-        AnimatedVisibility(
-            visible = visible,
-            modifier = modifier,
-            enter = slideInVertically { it + clearance },
-            exit = slideOutVertically { it + clearance },
-        ) {
-            ToolbarButtons(
-                onRefresh = onRefresh,
-                onSearch = onSearch,
-                onShowFilters = onShowFilters,
-                onShowDevices = onShowDevices,
-                onShowSettings = onShowSettings,
-            )
-        }
-        return
-    }
-
-    // A sheet or the search screen covers this spot. The window would otherwise sit above them.
-    if (covered) return
-
-    val slide by animateDpAsState(
-        targetValue = if (visible) 0.dp else FloatingToolbarDefaults.ContainerSize + ToolbarSlideClearance,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-        label = "toolbarSlide",
-    )
-    val hidden = FloatingToolbarDefaults.ContainerSize + ToolbarSlideClearance
-    if (!visible && slide >= hidden) return
-
-    // The pill stays in the scaffold slot so its position matches the flat toolbar, but it is not
-    // drawn there. Background blur is the window background, so the icons have to be drawn in
-    // that window; a window placed over the activity would frost over the icons.
-    var bounds by remember { mutableStateOf<Rect?>(null) }
+    var reported by remember { mutableStateOf<Rect?>(null) }
     Box(
         modifier = modifier.onGloballyPositioned { coordinates ->
             val inWindow = coordinates.boundsInWindow()
-            if (inWindow != bounds) bounds = inWindow
+            if (inWindow.width <= 0f || inWindow.height <= 0f || inWindow == reported) return@onGloballyPositioned
+            reported = inWindow
+            onBounds(inWindow)
         },
     ) {
         ToolbarIcons(
@@ -140,13 +130,79 @@ fun ChangelogFloatingToolbar(
                 },
         )
     }
+}
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun ChangelogFloatingToolbar(
+    onPage: Boolean,
+    expanded: Boolean,
+    covered: Boolean,
+    bounds: Rect?,
+    onRefresh: () -> Unit,
+    onSearch: () -> Unit,
+    onShowFilters: () -> Unit,
+    onShowDevices: () -> Unit,
+    onShowSettings: () -> Unit,
+) {
+    val blur = rememberSurfaceBlur()
+    // A sheet or the search screen covers this spot. Leave immediately; sliding would show
+    // the window above the sheet on the way out.
+    if (covered) return
+
+    val hidden = FloatingToolbarDefaults.ContainerSize + ToolbarSlideClearance
+    val slide = remember { Animatable(0.dp, Dp.VectorConverter) }
+    var lastPage by remember { mutableStateOf(onPage) }
+    var fadeWithSlide by remember { mutableStateOf(false) }
+    // Scroll keeps the time-based spring. A page change does not: the navigation hitch is long
+    // enough that a spring's first drawn frame is already off the screen.
+    LaunchedEffect(onPage, expanded) {
+        val target = if (onPage && expanded) 0.dp else hidden
+        val paging = onPage != lastPage
+        lastPage = onPage
+        fadeWithSlide = paging
+        if (paging) {
+            slide.easeOutByFrame(target)
+        } else {
+            slide.animateTo(target, spring(stiffness = Spring.StiffnessMediumLow))
+        }
+        fadeWithSlide = false
+    }
+    val slideValue = slide.value
     val place = bounds ?: return
+    if ((!onPage || !expanded) && slideValue >= hidden) return
+    val alpha = if (fadeWithSlide) {
+        // Stay solid while the pill is still over the page, then fade as it leaves.
+        val progress = (slideValue.value / hidden.value).coerceIn(0f, 1f)
+        ((1f - progress) / 0.45f).coerceIn(0f, 1f)
+    } else {
+        1f
+    }
+
+    if (!blur.active) {
+        val slidePx = with(LocalDensity.current) { slideValue.roundToPx() }
+        Box(modifier = Modifier.fillMaxSize()) {
+            ToolbarButtons(
+                onRefresh = onRefresh,
+                onSearch = onSearch,
+                onShowFilters = onShowFilters,
+                onShowDevices = onShowDevices,
+                onShowSettings = onShowSettings,
+                modifier = Modifier
+                    .graphicsLayer { this.alpha = alpha }
+                    .offset {
+                        IntOffset(place.left.roundToInt(), place.top.roundToInt() + slidePx)
+                    },
+            )
+        }
+        return
+    }
+
     val context = LocalContext.current
     // Read the tint here. The dialog window does not inherit this theme's content color.
     val iconTint = FloatingToolbarDefaults.standardFloatingToolbarColors().toolbarContentColor
     val blurWindow = remember { ToolbarBlurWindow(context) }
-    val slidePx = with(LocalDensity.current) { slide.roundToPx() }
+    val slidePx = with(LocalDensity.current) { slideValue.roundToPx() }
     val radiusPx = with(LocalDensity.current) { SheetBlurRadius.roundToPx() }
     // Same frost as the sheets.
     val frosted = blur.frosted.toArgb()
@@ -171,7 +227,7 @@ fun ChangelogFloatingToolbar(
                 )
             }
         }
-        blurWindow.place(place, slidePx, radiusPx, frosted)
+        blurWindow.place(place, slidePx, radiusPx, frosted, alpha)
     }
 }
 
@@ -275,6 +331,24 @@ private fun ToolbarButton(
 }
 
 /**
+ * Slide toward [target] on drawn frames, never skipping ahead when a frame is late.
+ * A page change stalls the first frame, and a time-based spring spends that stall off screen.
+ */
+private suspend fun Animatable<Dp, AnimationVector1D>.easeOutByFrame(target: Dp) {
+    while (true) {
+        val remaining = target.value - value.value
+        if (abs(remaining) <= 0.5f) {
+            snapTo(target)
+            return
+        }
+        withFrameNanos { }
+        // Small enough that the pill is still on screen for several frames after a late frame.
+        val step = (remaining * 0.16f).coerceIn(-3.5f, 3.5f)
+        snapTo((value.value + step).dp)
+    }
+}
+
+/**
  * Pill-sized window. Its background blurs the list behind the toolbar and the icons are drawn
  * on top of that, in this same window.
  */
@@ -339,9 +413,10 @@ private class ToolbarBlurWindow(
         composeView.setContent(content)
     }
 
-    fun place(bounds: Rect, dy: Int, radiusPx: Int, tint: Int) {
+    fun place(bounds: Rect, dy: Int, radiusPx: Int, tint: Int, alpha: Float) {
         val window = window ?: return
         if (bounds.width <= 0f || bounds.height <= 0f) return
+        window.decorView.alpha = alpha.coerceIn(0f, 1f)
         val corner = bounds.height / 2f
         setActive(radiusPx, corner, tint)
         val x = bounds.left.roundToInt()
@@ -360,6 +435,7 @@ private class ToolbarBlurWindow(
         params.width = width
         params.height = height
         window.attributes = params
+        window.decorView.alpha = alpha.coerceIn(0f, 1f)
         if (!blurLatched) applyBlur()
     }
 
