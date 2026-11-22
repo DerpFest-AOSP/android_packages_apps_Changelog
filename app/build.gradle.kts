@@ -10,6 +10,17 @@ plugins {
     alias(libs.plugins.lineageos.generatebp)
 }
 
+// The inline build copies this into Android.bp. A release number is meaningless here.
+fun Project.shortCommit(): String {
+    val execResult = providers.exec {
+        commandLine("git", "rev-parse", "--short", "HEAD")
+        isIgnoreExitValue = true
+    }
+    val hash = execResult.standardOutput.asText.get().trim()
+
+    return if (execResult.result.get().exitValue == 0 && hash.isNotEmpty()) hash else "1.0"
+}
+
 android {
     namespace = "org.derpfest.changelog"
     compileSdk {
@@ -21,7 +32,7 @@ android {
         minSdk = 36
         targetSdk = 37
         versionCode = 1
-        versionName = "1.0"
+        versionName = shortCommit()
     }
 
     buildTypes {
