@@ -31,6 +31,8 @@ class GitHubDataSource {
         ignoreUnknownKeys = true
     }
 
+    private val defaultBranchesByOrganization = mutableMapOf<String, Map<String, String>>()
+
     /**
      * Search the commits that got committed since [since], newest first. GitHub only searches the
      * default branch of each repository and returns at most [MAX_RESULTS] commits.
@@ -69,6 +71,50 @@ class GitHubDataSource {
             changes = changes.distinctBy { it.id },
             isTruncated = isTruncated,
         )
+    }
+
+    /**
+     * The default branch of each public repository in [organization], as `owner/name` in lower
+     * case. Commit search only looks at that branch, so a repository whose default branch isn't
+     * the one the manifest tracks has to be left out.
+     *
+     * @throws ChangelogError If the repositories couldn't be fetched
+     */
+    suspend fun defaultBranches(organization: String): Map<String, String> = withContext(Dispatchers.IO) {
+        defaultBranchesByOrganization[organization]?.let { return@withContext it }
+
+        val branches = buildMap {
+            var page = 1
+
+            while (true) {
+                val url = URL(
+                    "$API_URL/orgs/$organization/repos?per_page=$PER_PAGE&page=$page&type=public"
+                )
+                val repositories = try {
+                    json.decodeFromString<List<RepositoryBranch>>(
+                        url.fetch(
+                            "Accept" to "application/vnd.github+json",
+                            "X-GitHub-Api-Version" to API_VERSION,
+                        )
+                    )
+                } catch (e: SerializationException) {
+                    throw ChangelogError.InvalidResponse
+                }
+
+                repositories.forEach {
+                    put("$organization/${it.name}".lowercase(), it.defaultBranch)
+                }
+
+                if (repositories.size < PER_PAGE) {
+                    break
+                }
+
+                page++
+            }
+        }
+
+        defaultBranchesByOrganization[organization] = branches
+        branches
     }
 
     private fun searchCommits(query: String, page: Int): SearchCommitsResponse {
@@ -146,6 +192,12 @@ class GitHubDataSource {
     @Serializable
     private data class Repository(
         @SerialName("full_name") val fullName: String,
+    )
+
+    @Serializable
+    private data class RepositoryBranch(
+        val name: String,
+        @SerialName("default_branch") val defaultBranch: String,
     )
 
     @Serializable

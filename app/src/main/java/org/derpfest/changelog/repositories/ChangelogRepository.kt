@@ -161,13 +161,31 @@ class ChangelogRepository(
         }.toMap()
 
         val result = gitHubDataSource.searchCommits(gitHubOrganizations, since)
+        val defaultBranches = buildMap {
+            gitHubOrganizations.filterValues { it == ChangeSource.DERPFEST }.keys.forEach { org ->
+                putAll(gitHubDataSource.defaultBranches(org))
+            }
+        }
 
         return result.copy(
             changes = result.changes.mapNotNull { change ->
                 when (change.source) {
-                    // Organizations also host repositories that aren't part of the ROM
-                    ChangeSource.DERPFEST -> projects[change.repository.lowercase()]?.let {
-                        change.copy(path = it.path, branch = it.branch)
+                    // Organizations also host repositories that aren't part of the ROM.
+                    // Search only returns the default branch, so it isn't the tracked branch
+                    // when those two differ.
+                    ChangeSource.DERPFEST -> projects[change.repository.lowercase()]?.let { project ->
+                        val defaultBranch = defaultBranches[change.repository.lowercase()]
+                        val trackedBranch = project.branch
+
+                        if (
+                            trackedBranch != null &&
+                            defaultBranch != null &&
+                            !trackedBranch.equals(defaultBranch, ignoreCase = true)
+                        ) {
+                            null
+                        } else {
+                            change.copy(path = project.path, branch = trackedBranch)
+                        }
                     }
 
                     else -> change
