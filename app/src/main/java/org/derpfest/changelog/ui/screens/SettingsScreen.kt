@@ -163,6 +163,10 @@ fun SettingsScreen(
 
             item(key = "about") {
                 SettingsSection(title = stringResource(R.string.settings_about)) {
+                    // The version isn't an action. It stays out of the click path, and uses the
+                    // regular row colors so it reads with the rest of About.
+                    val rowColors = ListItemDefaults.segmentedColors()
+
                     Column(
                         verticalArrangement = Arrangement.spacedBy(ListItemDefaults.SegmentedGap),
                     ) {
@@ -170,6 +174,12 @@ fun SettingsScreen(
                             onClick = {},
                             shapes = ListItemDefaults.segmentedShapes(index = 0, count = 3),
                             enabled = false,
+                            colors = ListItemDefaults.segmentedColors(
+                                disabledContainerColor = rowColors.containerColor,
+                                disabledContentColor = rowColors.contentColor,
+                                disabledLeadingContentColor = rowColors.leadingContentColor,
+                                disabledSupportingContentColor = rowColors.supportingContentColor,
+                            ),
                             leadingContent = {
                                 Icon(
                                     imageVector = Icons.Filled.Info,
