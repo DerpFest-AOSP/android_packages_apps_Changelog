@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.derpfest.changelog.ext.fetch
 import org.derpfest.changelog.models.ChangelogError
@@ -33,9 +34,7 @@ class DevicesDataSource(
      * @throws ChangelogError If the devices couldn't be fetched
      */
     suspend fun getDevices(): List<Device> = withContext(Dispatchers.IO) {
-        val response = json.decodeFromString<DevicesIndexResponse>(
-            URL(indexUrl).fetch()
-        )
+        val response = decode<DevicesIndexResponse>(URL(indexUrl).fetch())
 
         response.devices
             .map {
@@ -67,7 +66,7 @@ class DevicesDataSource(
                             "?per_page=$REPOS_PER_PAGE&page=$page&type=public"
                 )
 
-                val repositories = json.decodeFromString<List<GitHubRepositoryResponse>>(
+                val repositories = decode<List<GitHubRepositoryResponse>>(
                     url.fetch(
                         "Accept" to "application/vnd.github+json",
                         "X-GitHub-Api-Version" to "2022-11-28",
@@ -124,7 +123,7 @@ class DevicesDataSource(
         ).toURL()
 
         return try {
-            json.decodeFromString<List<DependencyResponse>>(url.fetch()).map { it.repository }
+            decode<List<DependencyResponse>>(url.fetch()).map { it.repository }
         } catch (e: ChangelogError.Http) {
             if (e.code == 404) {
                 emptyList()
@@ -168,6 +167,12 @@ class DevicesDataSource(
     private data class DependencyResponse(
         val repository: String,
     )
+
+    private inline fun <reified T> decode(body: String): T = try {
+        json.decodeFromString<T>(body)
+    } catch (e: SerializationException) {
+        throw ChangelogError.InvalidResponse
+    }
 
     companion object {
         private const val REPOS_PER_PAGE = 100
