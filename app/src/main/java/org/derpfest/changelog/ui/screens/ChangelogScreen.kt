@@ -349,7 +349,11 @@ fun ChangelogScreen(
                                     expandedChangeIds = expandedChangeIds,
                                     newChangeIds = newChangeIds,
                                     highlightNew = highlightNew,
-                                    isTruncated = changelog?.isTruncated == true,
+                                    isTruncated = changelog?.isMissingChangesBefore(
+                                        page.filter.period.startTime(
+                                            System.currentTimeMillis()
+                                        )
+                                    ) == true,
                                     onChangeClick = onChangeClick,
                                     onOpen = onOpen,
                                     onShare = onShare,

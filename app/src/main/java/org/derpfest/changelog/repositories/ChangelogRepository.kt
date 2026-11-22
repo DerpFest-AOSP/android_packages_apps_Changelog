@@ -122,12 +122,16 @@ class ChangelogRepository(
             .filter { it.timestamp >= retainSince }
             .sortedByDescending { it.timestamp }
 
+        val storedSince = maxOf(changelog?.since ?: start, retainSince)
+        val completeSince = completeSince(changelog, since, results)
+
         val newChangelog = Changelog(
             buildTime = Build.TIME,
-            since = maxOf(changelog?.since ?: start, retainSince),
+            since = storedSince,
             updatedAt = now,
             changes = changes,
-            isTruncated = results.any { it.isTruncated } || changelog?.isTruncated == true,
+            isTruncated = completeSince > storedSince,
+            completeSince = completeSince,
         )
 
         withContext(Dispatchers.IO) {
@@ -139,6 +143,45 @@ class ChangelogRepository(
         _newChangeIds.value = changes.filter {
             it.id !in knownChanges.changeIds && it.timestamp >= knownChanges.since
         }.mapTo(mutableSetOf()) { it.id }
+    }
+
+    /**
+     * The time from which [results], merged with [previous], include every change.
+     *
+     * An update keeps an older hole. A fetch that reaches the start of [previous] and is not cut
+     * off replaces it.
+     */
+    private fun completeSince(
+        previous: Changelog?,
+        fetchedFrom: Long,
+        results: List<ChangesResult>,
+    ): Long {
+        val isTruncated = results.any { it.isTruncated }
+        val fetchedCompleteSince = if (!isTruncated) {
+            fetchedFrom
+        } else {
+            results.filter { it.isTruncated }
+                .mapNotNull { it.changes.minOfOrNull { change -> change.timestamp } }
+                .maxOrNull()
+                ?: Long.MAX_VALUE
+        }
+
+        if (previous == null || (!isTruncated && fetchedFrom <= previous.since)) {
+            return fetchedCompleteSince
+        }
+
+        val previousComplete = previous.knownCompleteSince()
+
+        return if (isTruncated) {
+            maxOf(previousComplete, fetchedCompleteSince)
+        } else if (
+            previous.completeSince == Changelog.UNKNOWN_COMPLETE_SINCE &&
+            previous.isTruncated
+        ) {
+            previousComplete
+        } else {
+            minOf(previousComplete, fetchedFrom)
+        }
     }
 
     private suspend fun loadLocked() {
