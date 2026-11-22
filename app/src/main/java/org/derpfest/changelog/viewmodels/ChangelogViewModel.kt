@@ -41,9 +41,24 @@ import org.derpfest.changelog.models.Change
 import org.derpfest.changelog.models.ChangeSource
 import org.derpfest.changelog.models.ChangelogEntry
 import org.derpfest.changelog.models.ChangelogError
+import org.derpfest.changelog.models.ChangesFilter
 import org.derpfest.changelog.models.Period
 import java.time.Instant
 import java.time.ZoneId
+
+/**
+ * The changelog list for the filter that produced it.
+ *
+ * The filter and the entries come from the same pass, so a content swap can hold one and show
+ * the other without the two getting out of step.
+ *
+ * @param filter The filter the entries were built with
+ * @param entries The list entries, newest first
+ */
+data class ChangelogListContent(
+    val filter: ChangesFilter,
+    val entries: List<ChangelogEntry>,
+)
 
 /**
  * View model of the changelog screen.
@@ -152,21 +167,26 @@ class ChangelogViewModel(application: Application) : AndroidViewModel(applicatio
         )
 
     /**
-     * The entries of the list, null until the changelog got loaded or fetched.
+     * The list on screen, null until the changelog got loaded or fetched.
      */
-    val entries = combine(
+    val list = combine(
         filteredChanges,
         filter,
         devicesRepository.thisDeviceRepositories,
-    ) { changes, filter, thisDeviceRepositories ->
-        changes?.toEntries(
-            buildTime = Build.TIME.takeIf { time ->
-                val since = filter.period.startTime(System.currentTimeMillis())
-                filter.period != Period.SINCE_BUILD && time >= since
-            },
-            deviceName = Build.MODEL.ifBlank { Build.DEVICE },
-            deviceRepositories = thisDeviceRepositories.orEmpty(),
-        )
+    ) { changes, activeFilter, thisDeviceRepositories ->
+        changes?.let {
+            ChangelogListContent(
+                filter = activeFilter,
+                entries = it.toEntries(
+                    buildTime = Build.TIME.takeIf { time ->
+                        val since = activeFilter.period.startTime(System.currentTimeMillis())
+                        activeFilter.period != Period.SINCE_BUILD && time >= since
+                    },
+                    deviceName = Build.MODEL.ifBlank { Build.DEVICE },
+                    deviceRepositories = thisDeviceRepositories.orEmpty(),
+                ),
+            )
+        }
     }
         .flowOn(Dispatchers.Default)
         .stateIn(
