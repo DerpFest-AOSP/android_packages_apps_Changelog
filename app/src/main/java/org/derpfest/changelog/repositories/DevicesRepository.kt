@@ -123,7 +123,9 @@ class DevicesRepository(context: Context) {
         }
 
         val repositories = loadRepositoriesLocked(force = false)
-        val byNormalizedName = repositories.associateBy {
+        // android_ and proprietary_ are prefixes for the same tree, but both repositories can
+        // exist. A dependency names one of them, so every match has to be kept.
+        val byNormalizedName = repositories.groupBy {
             RepositoryNames.normalize(it.name).lowercase()
         }
 
@@ -154,8 +156,8 @@ class DevicesRepository(context: Context) {
                 }
             }
 
-            dependencies.mapNotNull { dependency ->
-                byNormalizedName[RepositoryNames.normalize(dependency).lowercase()]
+            dependencies.flatMap { dependency ->
+                byNormalizedName[RepositoryNames.normalize(dependency).lowercase()].orEmpty()
             }.forEach(queue::addLast)
         }
 
